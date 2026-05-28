@@ -1,0 +1,89 @@
+title: "장준민의 기술 블로그"
+subtitle: "AI, LLM, Agent 공부 기록"
+name: "장준민"
+description: "AI, LLM, Agent, 시스템 구현을 공부하며 정리하는 기술 블로그입니다."
+url: "https://wkd09.github.io"
+baseurl: ""
+repository: "wkd09/wkd09.github.io"
+locale: "ko-KR"
+timezone: "Asia/Seoul"
+
+theme: "minimal-mistakes-jekyll"
+minimal_mistakes_skin: "default"
+
+plugins:
+  - jekyll-include-cache
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+author:
+  name: "장준민"
+  avatar: "/assets/images/chikeke.webp"
+  bio: "AI, LLM, Agent 공부 기록"
+  location: "South Korea"
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/wkd09"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope"
+      url: "mailto:your-email@example.com"
+    - label: "LinkedIn"
+      icon: "fab fa-fw fa-linkedin"
+      url: "#"
+    - label: "Velog"
+      icon: "fas fa-fw fa-pen"
+      url: "#"
+    - label: "Notion"
+      icon: "fas fa-fw fa-book"
+      url: "#"
+
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/wkd09"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope"
+      url: "mailto:your-email@example.com"
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profile: true
+      read_time: true
+      comments: false
+      share: true
+      related: true
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+search: true
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - _templates

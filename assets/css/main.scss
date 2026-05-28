@@ -1,0 +1,165 @@
+---
+# Only the main Sass file needs front matter.
+---
+
+@charset "utf-8";
+
+@import "minimal-mistakes/skins/default";
+@import "minimal-mistakes";
+
+:root {
+  --lab-navy: #172033;
+  --lab-ink: #243041;
+  --lab-muted: #64748b;
+  --lab-line: #d8dee8;
+  --lab-soft: #f6f8fb;
+  --lab-accent: #2563eb;
+  --lab-accent-dark: #1e40af;
+}
+
+body {
+  background: #ffffff;
+  color: var(--lab-ink);
+}
+
+.masthead {
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.greedy-nav {
+  background: #ffffff;
+}
+
+.greedy-nav .visible-links {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.greedy-nav .visible-links a {
+  color: #475569;
+  padding: 0.75rem 0.65rem;
+  font-weight: 700;
+}
+
+.greedy-nav .visible-links a::before {
+  height: 2px;
+  background: var(--lab-accent);
+}
+
+.greedy-nav .visible-links a:hover {
+  color: var(--lab-navy);
+}
+
+.site-title {
+  color: var(--lab-navy);
+  font-weight: 800;
+}
+
+.author__avatar img {
+  border: 1px solid var(--lab-line);
+  background: #0f172a;
+  image-rendering: auto;
+}
+
+.author__name {
+  color: var(--lab-navy);
+}
+
+.author__bio {
+  color: #475569;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.page__title,
+.archive__item-title {
+  color: var(--lab-navy);
+}
+
+.blog-intro {
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.blog-intro h1 {
+  margin: 0 0 0.35rem;
+  color: var(--lab-navy);
+  font-size: 1.75rem;
+  letter-spacing: 0;
+}
+
+.blog-intro p {
+  margin: 0;
+  color: var(--lab-muted);
+}
+
+.post-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.post-list__item {
+  border-bottom: 1px solid var(--lab-line);
+}
+
+.post-list__item a {
+  display: block;
+  padding: 0.9rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-list__item h2 {
+  margin: 0 0 0.25rem;
+  color: var(--lab-navy);
+  font-size: 1.1rem;
+  letter-spacing: 0;
+}
+
+.post-list__item p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.post-list__meta {
+  color: var(--lab-muted) !important;
+  font-size: 0.78rem !important;
+}
+
+.empty-state {
+  padding: 1.25rem;
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  background: var(--lab-soft);
+}
+
+.empty-state p {
+  margin: 0 0 0.25rem;
+  color: var(--lab-navy);
+  font-weight: 800;
+}
+
+.empty-state span {
+  color: var(--lab-muted);
+  font-size: 0.9rem;
+}
+
+code,
+pre {
+  font-size: 0.9em;
+}
+
+div.highlighter-rouge,
+figure.highlight {
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .greedy-nav .visible-links a {
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
+  }
+}
