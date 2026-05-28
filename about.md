@@ -23,7 +23,7 @@ AI, LLM, Agent, 시스템 구현을 공부하고 있습니다.
 ## Links
 
 - GitHub: [https://github.com/wkd09](https://github.com/wkd09)
-- Email: [your-email@example.com](mailto:your-email@example.com)
-- LinkedIn: optional
-- Velog: optional
+- Email: [wkdwnsals0413@gmail.com](mailto:wkdwnsals0413@gmail.com)
+- LinkedIn: [https://www.linkedin.com/in/%EC%A4%80%EB%AF%BC-%EC%9E%A5-2664963a5/](https://www.linkedin.com/in/%EC%A4%80%EB%AF%BC-%EC%9E%A5-2664963a5/)
+- Velog: [https://velog.io/@junmin0413/posts](https://velog.io/@junmin0413/posts)
 - Notion: optional
