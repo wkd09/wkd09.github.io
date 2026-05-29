@@ -38,9 +38,9 @@ LoRA는 weight update가 낮은 rank를 가진다고 가정한다.
 
 기존 weight를 `W0`라고 할 때 full fine-tuning은 `W0 + ΔW`를 직접 학습한다. LoRA는 `ΔW`를 두 개의 작은 matrix 곱으로 표현한다.
 
-```text
-W = W0 + BA
-```
+$$
+W = W_0 + BA
+$$
 
 여기서:
 
@@ -51,11 +51,13 @@ W = W0 + BA
 
 수식으로 보면 다음과 같다.
 
-```text
-B in R^{d x r}
-A in R^{r x k}
-r << min(d, k)
-```
+$$
+B \in \mathbb{R}^{d \times r},
+\quad
+A \in \mathbb{R}^{r \times k},
+\quad
+r \ll \min(d, k)
+$$
 
 즉, 큰 matrix 전체를 학습하지 않고 작은 두 matrix만 학습한다.
 
@@ -63,15 +65,15 @@ r << min(d, k)
 
 기존 linear layer가 다음과 같다면:
 
-```text
-h = W0 x
-```
+$$
+h = W_0x
+$$
 
 LoRA를 적용한 forward pass는 다음처럼 된다.
 
-```text
-h = W0 x + BAx
-```
+$$
+h = W_0x + BAx
+$$
 
 `W0`는 고정되어 있고, `A`, `B`만 학습된다.
 

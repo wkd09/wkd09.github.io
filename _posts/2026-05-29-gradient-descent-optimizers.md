@@ -12,13 +12,16 @@ source: "Notion PDF Export - Gradient Descent, Optimizer"
 
 ![Gradient descent curve](/assets/images/blog/gradient-descent.svg)
 
+<small>Image: [Wikimedia Commons - Gradient descent](https://commons.wikimedia.org/wiki/Special:FilePath/Gradient_descent.svg)</small>
+
 Gradient Descent는 loss를 줄이기 위해 파라미터를 조금씩 움직이는 최적화 방법이다. 현재 위치에서 loss가 가장 빠르게 증가하는 방향이 gradient라면, 학습은 그 반대 방향으로 이동한다.
 
 $$
-\theta = \theta - \eta \nabla J(\theta)
+\theta_{t+1}
+= \theta_t - \eta \nabla_{\theta}J(\theta_t)
 $$
 
-여기서 `theta`는 파라미터, `eta`는 learning rate, `J(theta)`는 loss function이다.
+여기서 $\theta$는 파라미터, $\eta$는 learning rate, $J(\theta)$는 loss function이다.
 
 ## Learning Rate
 
@@ -49,7 +52,7 @@ Mini-batch 크기도 optimizer의 동작에 영향을 준다. batch size가 작�
 Momentum은 이전 업데이트 방향을 일부 유지한다.
 
 $$
-v_t = \gamma v_{t-1} + \eta \nabla J(\theta)
+v_t = \gamma v_{t-1} + \eta \nabla_{\theta}J(\theta_t)
 $$
 
 관성처럼 움직이기 때문에 같은 방향으로 계속 내려가는 경우 속도가 붙고, gradient가 자주 흔들리는 방향은 완화된다.

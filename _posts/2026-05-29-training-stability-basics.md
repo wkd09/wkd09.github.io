@@ -18,9 +18,9 @@ source: "Notion PDF Export - Activation Function, Variance & Bias, Overfitting"
 
 뉴런은 기본적으로 다음과 같은 선형 계산을 한다.
 
-```text
+$$
 z = wx + b
-```
+$$
 
 만약 신경망이 선형 함수만 사용한다면, layer를 아무리 많이 쌓아도 결국 하나의 선형 함수와 같아진다. 복잡한 패턴을 학습하려면 비선형성이 필요하다.
 
@@ -30,9 +30,9 @@ Activation function은 이 비선형성을 넣어주는 역할을 한다.
 
 Sigmoid는 출력을 0과 1 사이로 만든다.
 
-```text
-f(x) = 1 / (1 + e^-x)
-```
+$$
+\sigma(x) = \frac{1}{1 + e^{-x}}
+$$
 
 확률처럼 해석할 수 있어 이진 분류의 출력층에서 사용된다. 하지만 입력값이 너무 크거나 작으면 gradient가 거의 0이 되어 vanishing gradient 문제가 생길 수 있다.
 
@@ -46,9 +46,9 @@ Sigmoid보다 출력 중심이 0에 가까워 학습이 조금 더 잘 될 수 �
 
 ReLU는 딥러닝에서 가장 널리 쓰이는 activation function이다.
 
-```text
-f(x) = max(0, x)
-```
+$$
+\mathrm{ReLU}(x) = \max(0, x)
+$$
 
 계산이 단순하고 양수 구간에서는 gradient가 유지되기 때문에 sigmoid나 tanh보다 깊은 네트워크 학습에 유리하다.
 

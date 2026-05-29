@@ -73,6 +73,9 @@ kramdown:
   syntax_highlighter: rouge
 
 search: true
+after_footer_scripts:
+  - /assets/js/mathjax-config.js
+
 category_archive:
   type: liquid
   path: /categories/

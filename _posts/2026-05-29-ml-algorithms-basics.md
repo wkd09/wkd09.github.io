@@ -11,7 +11,9 @@ tags:
 source: "Notion PDF Export - Algorithm"
 ---
 
-![Machine learning algorithm map](/assets/images/blog/ml-algorithms.svg)
+![Scikit-learn decision tree example](/assets/images/blog/ml-algorithms.png)
+
+<small>Image: [Wikimedia Commons - Scikit-learn machine learning decision tree](https://commons.wikimedia.org/wiki/Special:FilePath/Scikit-learn_machine_learning_decision_tree.png)</small>
 
 머신러닝 알고리즘을 볼 때 먼저 구분해야 하는 것은 **무엇을 예측하려는가**이다. 연속적인 값을 예측하면 회귀 문제이고, 정해진 클래스를 고르면 분류 문제다. 그 위에서 모델이 데이터를 나누는 방식, 여러 모델을 합치는 방식에 따라 선형 회귀, 로지스틱 회귀, 의사결정트리, 앙상블 같은 방법으로 나뉜다.
 
@@ -28,7 +30,7 @@ $$
 입력 변수가 하나면 단순 선형 회귀이고, 입력 변수가 여러 개면 다중 선형 회귀가 된다.
 
 $$
-y = w_1x_1 + w_2x_2 + ... + w_nx_n + b
+y = w_1x_1 + w_2x_2 + \cdots + w_nx_n + b
 $$
 
 선형 회귀의 장점은 해석이 쉽다는 점이다. 각 feature의 가중치를 보면 어떤 변수가 예측에 얼마나 영향을 주는지 대략적으로 볼 수 있다. 반대로 데이터의 관계가 비선형이면 직선 하나로는 표현력이 부족하다.

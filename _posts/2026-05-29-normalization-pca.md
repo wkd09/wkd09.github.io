@@ -12,6 +12,8 @@ source: "Notion PDF Export - Normalization, PCA"
 
 ![Normalization and PCA](/assets/images/blog/normalization-pca.svg)
 
+<small>Image: [Wikimedia Commons - Gaussian scatter PCA](https://commons.wikimedia.org/wiki/Special:FilePath/GaussianScatterPCA.svg)</small>
+
 Normalization은 학습을 안정적으로 만들기 위해 값의 분포를 조정하는 방법이다. PCA는 데이터의 중요한 분산 방향을 찾아 차원을 줄이는 방법이다. 둘 다 데이터를 더 다루기 쉬운 형태로 바꾼다는 공통점이 있다.
 
 ## Batch Normalization
@@ -19,13 +21,14 @@ Normalization은 학습을 안정적으로 만들기 위해 값의 분포를 조
 Batch Normalization은 mini-batch 단위로 activation의 평균과 분산을 맞춘다.
 
 $$
-\hat{x} = \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}
+\hat{x}_i
+= \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}
 $$
 
-이후 학습 가능한 `gamma`, `beta`를 적용한다.
+이후 학습 가능한 $\gamma$, $\beta$를 적용한다.
 
 $$
-y = \gamma \hat{x} + \beta
+y_i = \gamma \hat{x}_i + \beta
 $$
 
 Batch Normalization의 목적은 layer를 통과할 때 activation 분포가 계속 바뀌는 문제를 줄이는 것이다. 이를 internal covariate shift 관점에서 설명한다. 분포가 안정되면 더 큰 learning rate를 사용할 수 있고, 학습이 빨라지며, 어느 정도 regularization 효과도 생긴다.

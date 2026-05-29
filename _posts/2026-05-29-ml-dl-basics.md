@@ -72,10 +72,13 @@ agent가 어떤 행동을 하고, 환경으로부터 reward를 받은 뒤, 더 �
 
 하나의 뉴런은 여러 입력값을 받아 weight와 bias를 적용한 뒤 activation function을 거쳐 출력을 만든다.
 
-```text
-z = w1*x1 + w2*x2 + ... + wn*xn + b
-y = Activation(z)
-```
+$$
+z = w_1x_1 + w_2x_2 + \cdots + w_nx_n + b
+$$
+
+$$
+y = \mathrm{Activation}(z)
+$$
 
 층이 깊고 많아질수록 더 복잡한 패턴을 학습할 수 있다.
 

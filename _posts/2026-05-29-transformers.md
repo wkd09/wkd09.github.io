@@ -55,11 +55,11 @@ Scaled dot-product attention은 다음 흐름으로 동작한다.
 
 1. 입력 embedding에서 Q, K, V를 만든다.
 2. Q와 K를 내적해 attention score를 구한다.
-3. score를 `sqrt(d_k)`로 나눈다.
+3. score를 $\sqrt{d_k}$로 나눈다.
 4. softmax로 확률 분포를 만든다.
 5. 이 확률을 V에 곱해 최종 attention 값을 만든다.
 
-`sqrt(d_k)`로 나누는 이유는 내적 값이 너무 커지는 것을 막기 위해서다. 값이 커지면 softmax가 한쪽으로 치우치고 gradient가 작아져 학습이 불안정해질 수 있다.
+$\sqrt{d_k}$로 나누는 이유는 내적 값이 너무 커지는 것을 막기 위해서다. 값이 커지면 softmax가 한쪽으로 치우치고 gradient가 작아져 학습이 불안정해질 수 있다.
 
 ## Multi-Head Attention
 

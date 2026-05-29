@@ -12,6 +12,8 @@ source: "Notion PDF Export - Back propagation"
 
 ![Backpropagation through a neural network](/assets/images/blog/backpropagation.svg)
 
+<small>Image: [Wikimedia Commons - Artificial neural network](https://commons.wikimedia.org/wiki/Special:FilePath/Artificial_neural_network.svg)</small>
+
 Backpropagation은 neural network가 loss를 줄이기 위해 각 weight를 얼마나 바꿔야 하는지 계산하는 방법이다. 핵심은 **chain rule**이다.
 
 Forward propagation에서는 입력이 layer를 지나 output을 만든다. 이후 loss function이 예측값과 정답의 차이를 계산한다. Backpropagation은 이 loss가 각 weight에 의해 얼마나 변하는지 뒤에서 앞으로 거슬러 올라가며 계산한다.
@@ -46,8 +48,11 @@ Forward pass에서 중요한 것은 각 연산의 중간값을 저장해둔다�
 
 $$
 \frac{\partial L}{\partial w}
-= \frac{\partial L}{\partial \hat{y}}
+=
+\frac{\partial L}{\partial \hat{y}}
+\cdot
 \frac{\partial \hat{y}}{\partial z}
+\cdot
 \frac{\partial z}{\partial w}
 $$
 
@@ -62,12 +67,13 @@ $$
 Gradient를 구한 뒤 optimizer가 weight를 업데이트한다.
 
 $$
-w = w - \eta \frac{\partial L}{\partial w}
+w_{t+1}
+= w_t - \eta \frac{\partial L}{\partial w_t}
 $$
 
 gradient가 양수라면 weight를 줄이고, 음수라면 weight를 늘린다. 이렇게 하면 loss가 감소하는 방향으로 이동한다.
 
-여기서 `eta`가 learning rate다. gradient 방향이 맞더라도 learning rate가 너무 크면 최소점을 지나쳐 발산할 수 있고, 너무 작으면 학습이 지나치게 느려진다. 그래서 backpropagation은 optimizer, learning rate schedule과 함께 봐야 한다.
+여기서 $\eta$가 learning rate다. gradient 방향이 맞더라도 learning rate가 너무 크면 최소점을 지나쳐 발산할 수 있고, 너무 작으면 학습이 지나치게 느려진다. 그래서 backpropagation은 optimizer, learning rate schedule과 함께 봐야 한다.
 
 ## Vanishing Gradient와 Exploding Gradient
 

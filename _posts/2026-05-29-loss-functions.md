@@ -12,6 +12,8 @@ source: "Notion PDF Export - Loss Function"
 
 ![Loss and optimization loop](/assets/images/blog/loss-optimization.svg)
 
+<small>Image: [Wikimedia Commons - Simplified neural network training example](https://commons.wikimedia.org/wiki/Special:FilePath/Simplified_neural_network_training_example.svg)</small>
+
 Loss function은 모델의 예측값과 실제 정답 사이의 차이를 숫자로 표현하는 함수다. 학습은 이 loss를 줄이는 방향으로 파라미터를 업데이트하는 과정이라고 볼 수 있다.
 
 모델이 아무리 복잡해도 학습의 기본 흐름은 단순하다. 예측을 만들고, 정답과 비교해 loss를 계산하고, 그 loss를 줄이는 방향으로 gradient를 구한 뒤 파라미터를 업데이트한다.
@@ -25,7 +27,8 @@ Loss function은 모델의 예측값과 실제 정답 사이의 차이를 숫자
 Mean Squared Error는 오차를 제곱해서 평균낸다.
 
 $$
-MSE = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y_i})^2
+\mathrm{MSE}
+= \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2
 $$
 
 오차를 제곱하므로 큰 오차에 더 큰 penalty를 준다. 이상치에 민감하지만, 미분이 깔끔해서 많이 사용된다.
@@ -35,7 +38,7 @@ $$
 Root Mean Squared Error는 MSE에 루트를 씌운 값이다.
 
 $$
-RMSE = \sqrt{MSE}
+\mathrm{RMSE} = \sqrt{\mathrm{MSE}}
 $$
 
 단위가 원래 target과 같아져 해석이 쉽다. 예를 들어 집값 예측에서 RMSE가 1000만 원이면 평균적으로 그 정도 규모의 오차가 난다고 이해할 수 있다.
@@ -45,7 +48,8 @@ $$
 Mean Absolute Error는 오차의 절댓값을 평균낸다.
 
 $$
-MAE = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y_i}|
+\mathrm{MAE}
+= \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i|
 $$
 
 MSE보다 이상치에 덜 민감하다. 큰 오차를 특별히 더 강하게 벌주지 않기 때문에, outlier가 많은 데이터에서는 MAE가 더 안정적일 수 있다.
@@ -63,7 +67,8 @@ Cross entropy는 정답 분포와 예측 분포의 차이를 측정한다. 정�
 이진 분류에서는 Binary Cross Entropy를 쓴다.
 
 $$
-BCE = -[y\log(\hat{y}) + (1-y)\log(1-\hat{y})]
+\mathrm{BCE}
+= -\left[y\log(\hat{y}) + (1-y)\log(1-\hat{y})\right]
 $$
 
 다중 분류에서는 Categorical Cross Entropy를 사용한다. 정답이 one-hot encoding이면 categorical cross entropy를 쓰고, 정답이 class index 형태이면 sparse categorical cross entropy를 쓴다. 수학적으로 목표는 비슷하지만 입력 label 형식이 다르다.
