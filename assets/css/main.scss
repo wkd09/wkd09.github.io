@@ -157,6 +157,16 @@ figure.highlight {
   border-radius: 8px;
 }
 
+@media (min-width: 1024px) {
+  #main {
+    max-width: min(100% - 2rem, 1440px);
+  }
+
+  .layout--single .page {
+    padding-inline-end: 0;
+  }
+}
+
 @media (max-width: 640px) {
   .greedy-nav .visible-links a {
     padding-right: 0.45rem;
