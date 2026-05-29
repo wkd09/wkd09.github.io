@@ -111,11 +111,24 @@ body {
   text-decoration: none;
 }
 
+.post-list__item a:hover,
+.post-list__item a:focus {
+  text-decoration: none;
+}
+
+.post-list__item a:hover h2,
+.post-list__item a:focus h2 {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.16em;
+}
+
 .post-list__item h2 {
   margin: 0 0 0.25rem;
   color: var(--lab-navy);
   font-size: 1.1rem;
   letter-spacing: 0;
+  text-decoration: none;
 }
 
 .post-list__item p {
