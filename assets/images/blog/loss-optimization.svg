@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Loss function and optimization loop</title>
+  <desc id="desc">A loop from prediction to loss, gradient, parameter update, and lower loss.</desc>
+  <rect width="960" height="420" fill="#f8fafc"/>
+  <rect x="52" y="48" width="856" height="324" rx="18" fill="#ffffff" stroke="#d8dee9" stroke-width="2"/>
+  <text x="92" y="92" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" fill="#1f2937">Training Loop</text>
+  <text x="92" y="126" font-family="Inter, Arial, sans-serif" font-size="18" fill="#64748b">Loss turns wrong predictions into a scalar signal that optimizers can reduce.</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#1f2937">
+    <rect x="96" y="190" width="150" height="72" rx="14" fill="#eef6ff" stroke="#8fb7df"/>
+    <text x="133" y="234">Predict</text>
+    <rect x="304" y="190" width="150" height="72" rx="14" fill="#fff7ed" stroke="#f0b37e"/>
+    <text x="356" y="234">Loss</text>
+    <rect x="512" y="190" width="150" height="72" rx="14" fill="#f0fdf4" stroke="#8bcaa1"/>
+    <text x="548" y="234">Gradient</text>
+    <rect x="720" y="190" width="150" height="72" rx="14" fill="#f5f3ff" stroke="#b7a8ea"/>
+    <text x="754" y="234">Update</text>
+  </g>
+  <g stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrow)">
+    <path d="M246 226h58"/>
+    <path d="M454 226h58"/>
+    <path d="M662 226h58"/>
+    <path d="M795 262c0 66-624 66-624 0"/>
+  </g>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+</svg>

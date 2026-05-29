@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="420" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Machine learning algorithms overview</title>
+  <desc id="desc">A simple visual summary of regression, decision trees, and ensemble models.</desc>
+  <rect width="960" height="420" fill="#f8fafc"/>
+  <rect x="48" y="42" width="864" height="336" rx="18" fill="#ffffff" stroke="#d8dee9" stroke-width="2"/>
+  <text x="86" y="88" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" fill="#1f2937">ML Algorithm Map</text>
+  <text x="86" y="122" font-family="Inter, Arial, sans-serif" font-size="18" fill="#64748b">Pick the model shape by the output and decision boundary you need.</text>
+
+  <g transform="translate(88 160)">
+    <rect width="220" height="150" rx="12" fill="#eef6ff" stroke="#8fb7df"/>
+    <text x="24" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#1f2937">Regression</text>
+    <line x1="38" y1="108" x2="180" y2="58" stroke="#2563eb" stroke-width="4"/>
+    <circle cx="54" cy="96" r="6" fill="#3b82f6"/>
+    <circle cx="86" cy="86" r="6" fill="#3b82f6"/>
+    <circle cx="122" cy="72" r="6" fill="#3b82f6"/>
+    <circle cx="158" cy="68" r="6" fill="#3b82f6"/>
+    <text x="24" y="132" font-family="Inter, Arial, sans-serif" font-size="15" fill="#475569">continuous value</text>
+  </g>
+
+  <g transform="translate(370 160)">
+    <rect width="220" height="150" rx="12" fill="#f0fdf4" stroke="#8bcaa1"/>
+    <text x="24" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#1f2937">Decision Tree</text>
+    <circle cx="110" cy="61" r="18" fill="#22c55e"/>
+    <line x1="100" y1="76" x2="70" y2="104" stroke="#15803d" stroke-width="3"/>
+    <line x1="120" y1="76" x2="150" y2="104" stroke="#15803d" stroke-width="3"/>
+    <rect x="42" y="101" width="56" height="34" rx="8" fill="#bbf7d0"/>
+    <rect x="122" y="101" width="56" height="34" rx="8" fill="#bbf7d0"/>
+    <text x="24" y="132" font-family="Inter, Arial, sans-serif" font-size="15" fill="#475569">if-else split rules</text>
+  </g>
+
+  <g transform="translate(652 160)">
+    <rect width="220" height="150" rx="12" fill="#fff7ed" stroke="#f0b37e"/>
+    <text x="24" y="38" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700" fill="#1f2937">Ensemble</text>
+    <rect x="38" y="64" width="44" height="42" rx="8" fill="#fed7aa"/>
+    <rect x="88" y="64" width="44" height="42" rx="8" fill="#fdba74"/>
+    <rect x="138" y="64" width="44" height="42" rx="8" fill="#fb923c"/>
+    <path d="M82 85h20M132 85h20" stroke="#9a3412" stroke-width="3"/>
+    <text x="24" y="132" font-family="Inter, Arial, sans-serif" font-size="15" fill="#475569">many weak models</text>
+  </g>
+</svg>
