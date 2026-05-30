@@ -11,6 +11,15 @@ tags:
 source: "Notion - Transformers"
 ---
 
+![transformer block](/assets/images/blog/transformer-block.png)
+![scaled dot product attention](/assets/images/blog/scaled-dot-product-attention.png)
+![attention vs mha](/assets/images/blog/attention-vs-mha.png)
+![multi head attention](/assets/images/blog/multi-head-attention.png)
+![masked self attention](/assets/images/blog/masked-self-attention.png)
+![transformer attention math](/assets/images/blog/transformer-attention-math.png)
+![positional encoding](/assets/images/blog/positional-encoding.png)
+![transformer architecture](/assets/images/blog/transformer-architecture.png)
+
 Transformer는 Google의 논문 **Attention Is All You Need**에서 제안된 모델이다. 기존의 seq2seq처럼 encoder-decoder 구조를 사용하지만, RNN 계열의 recurrent 구조 없이 attention만으로 시퀀스를 처리한다.
 
 핵심은 문장을 순서대로 하나씩 읽는 대신, 문장 안의 토큰들이 서로 어떤 관계를 갖는지 직접 계산한다는 점이다.

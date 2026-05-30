@@ -10,6 +10,14 @@ tags:
 source: "Notion PDF Export - Activation Function, Variance & Bias, Overfitting"
 ---
 
+![activation functions](/assets/images/blog/activation-functions.png)
+![sigmoid](/assets/images/blog/sigmoid.png)
+![tanh](/assets/images/blog/tanh.png)
+![relu](/assets/images/blog/relu.png)
+![leaky relu](/assets/images/blog/leaky-relu.png)
+![bias variance curves](/assets/images/blog/bias-variance-curves.png)
+![bias variance target](/assets/images/blog/bias-variance-target.png)
+
 딥러닝 모델을 학습할 때는 모델 구조만 중요한 것이 아니다. 어떤 activation function을 쓰는지, 모델이 너무 단순하거나 복잡하지 않은지, 학습 데이터와 테스트 데이터 사이에서 일반화가 되는지도 중요하다.
 
 이 글에서는 activation function, bias-variance trade-off, overfitting과 underfitting을 함께 정리한다.

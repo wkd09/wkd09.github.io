@@ -10,6 +10,9 @@ tags:
 source: "Notion PDF Export - ML/DL"
 ---
 
+![deep neural network](/assets/images/blog/deep-neural-network.png)
+![neural network](/assets/images/blog/neural-network.png)
+
 머신러닝은 데이터를 이용해 알고리즘이 스스로 규칙을 학습하고, 이를 바탕으로 판단이나 예측을 수행하는 기술이다.
 
 사람이 직접 모든 규칙을 작성하는 방식과 다르게, 머신러닝은 데이터에서 패턴을 찾아낸다. 예를 들어 고양이 사진과 정답 label을 함께 학습하면, 새로운 이미지가 고양이인지 판단할 수 있다.

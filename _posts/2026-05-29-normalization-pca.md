@@ -10,6 +10,11 @@ tags:
 source: "Notion PDF Export - Normalization, PCA"
 ---
 
+![internal covariate shift](/assets/images/blog/internal-covariate-shift.png)
+![batch normalization](/assets/images/blog/batch-normalization.png)
+![normalization formulas](/assets/images/blog/normalization-formulas.png)
+![batch norm algorithm](/assets/images/blog/batch-norm-algorithm.png)
+
 ![Normalization and PCA](/assets/images/blog/normalization-pca.svg)
 
 <small>Image: [Wikimedia Commons - Gaussian scatter PCA](https://commons.wikimedia.org/wiki/Special:FilePath/GaussianScatterPCA.svg)</small>

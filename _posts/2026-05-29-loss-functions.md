@@ -10,6 +10,9 @@ tags:
 source: "Notion PDF Export - Loss Function"
 ---
 
+![mse loss](/assets/images/blog/mse-loss.png)
+![cross entropy loss](/assets/images/blog/cross-entropy-loss.png)
+
 ![Loss and optimization loop](/assets/images/blog/loss-optimization.svg)
 
 <small>Image: [Wikimedia Commons - Simplified neural network training example](https://commons.wikimedia.org/wiki/Special:FilePath/Simplified_neural_network_training_example.svg)</small>

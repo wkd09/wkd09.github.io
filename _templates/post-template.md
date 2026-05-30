@@ -1,4 +1,19 @@
+---
+title: "글 제목"
+date: YYYY-MM-DD 00:00:00 +0900
+categories:
+  - study
+tags:
+  - 태그
+---
+
 # 제목
+
+이미지가 필요하면 `assets/images/blog`에 `kebab-case.png`처럼 정리하고 아래처럼 넣는다.
+
+```md
+![이미지 설명](/assets/images/blog/example-image.png)
+```
 
 ## 1. 문제 상황
 

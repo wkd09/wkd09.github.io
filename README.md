@@ -39,13 +39,26 @@ _posts/YYYY-MM-DD-post-slug.md
 ```yaml
 ---
 title: "글 제목"
-date: 2026-05-28
+date: 2026-05-28 00:00:00 +0900
 categories:
-  - Engineering
+  - engineering
 tags:
   - LangGraph
   - AgentOps
 ---
+```
+
+카테고리는 글의 목적 기준으로 하나만 고릅니다.
+
+- `study`: 개념 공부, 이론 정리, 논문 읽기 전 배경지식
+- `engineering`: 구현, 시스템 설계, 성능 최적화, 서빙, 배포
+- `research`: 논문 리뷰, 실험 결과, 비교 분석
+- `troubleshooting`: 에러 해결, 삽질 기록, 재현과 해결 과정
+
+이미지는 `assets/images/blog`에 소문자 kebab-case 파일명으로 넣고 본문에서는 절대 경로를 사용합니다.
+
+```md
+![설명](/assets/images/blog/example-image.png)
 ```
 
 글 작성 템플릿은 `_templates` 디렉터리에 있습니다.

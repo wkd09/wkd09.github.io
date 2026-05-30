@@ -10,6 +10,13 @@ tags:
 source: "Notion PDF Export - Gradient Descent, Optimizer"
 ---
 
+![gradient descent surface](/assets/images/blog/gradient-descent-surface.png)
+![learning rate size](/assets/images/blog/learning-rate-size.png)
+![local minima](/assets/images/blog/local-minima.png)
+![momentum optimizer](/assets/images/blog/momentum-optimizer.png)
+![stochastic gradient descent](/assets/images/blog/stochastic-gradient-descent.png)
+![gradient descent batch](/assets/images/blog/gradient-descent-batch.png)
+
 ![Gradient descent curve](/assets/images/blog/gradient-descent.svg)
 
 <small>Image: [Wikimedia Commons - Gradient descent](https://commons.wikimedia.org/wiki/Special:FilePath/Gradient_descent.svg)</small>

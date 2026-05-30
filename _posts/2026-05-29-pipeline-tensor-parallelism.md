@@ -11,122 +11,113 @@ tags:
 source: "Velog PDF - Pipeline/Tensor Parallelism"
 ---
 
-대형 모델을 학습하거나 추론할 때는 단일 GPU에 모델 전체를 올리기 어렵다. 이때 모델을 어떻게 나눌 것인지가 중요해진다.
-
-대표적인 방식은 Pipeline Parallelism과 Tensor Parallelism이다.
-
-- Pipeline Parallelism: layer 단위로 모델을 나눈다.
-- Tensor Parallelism: 연산 또는 tensor 단위로 모델을 나눈다.
-
-두 방식 모두 GPU 메모리 한계를 넘기 위해 사용되지만, 병목과 trade-off가 다르다.
-
-## Pipeline Parallelism
-
-Pipeline Parallelism은 모델을 layer 단위로 잘라 여러 GPU에 나누는 방식이다.
-
-예를 들어 24개 layer가 있는 모델을 4개 GPU에 나눈다면, 각 GPU가 6개 layer를 담당한다. 입력은 첫 번째 GPU에서 시작해 다음 GPU로 순서대로 전달된다.
-
-주로 다음 상황에서 사용한다.
-
-- 모델이 너무 커서 GPU 하나에 올라가지 않을 때
-- GPU를 더 활용해 throughput을 올리고 싶을 때
-- Tensor Parallel보다 통신 비용을 줄이고 싶을 때
-
-하지만 pipeline 구조에는 bubble time이 생긴다. 앞 stage가 계산을 끝내고 다음 stage가 받을 때까지 일부 GPU가 idle 상태가 될 수 있다.
-
-## GPipe
-
-GPipe는 batch를 micro-batch로 나누어 pipeline 병렬성을 높이는 방식이다.
-
-핵심 아이디어는 다음과 같다.
-
-- 큰 batch를 여러 micro-batch로 분할한다.
-- 각 micro-batch를 pipeline stage에 순차적으로 흘린다.
-- stage들이 동시에 다른 micro-batch를 처리하게 만든다.
-
-micro-batch 수가 늘어나면 GPU idle이 줄고 throughput이 올라간다.
-
-하지만 마지막에는 pipeline flush가 필요하다. forward와 backward가 모두 끝날 때까지 일부 stage가 기다리는 구간이 생긴다.
-
-정리하면 GPipe는 메모리 효율은 좋지만 bubble이 남는다.
-
-## PipeDream과 1F1B
-
-PipeDream은 GPipe의 idle 문제를 줄이기 위해 등장했다.
-
-핵심은 1F1B, 즉 forward 하나를 수행한 뒤 backward 하나를 바로 수행하는 방식이다. 이렇게 하면 GPU가 쉬는 시간을 줄일 수 있다.
-
-장점은 GPU utilization이 올라간다는 점이다.
-
-하지만 문제가 있다. forward와 backward 사이에 parameter가 변경될 수 있어 gradient inconsistency가 생긴다. 이를 해결하려면 여러 버전의 parameter를 저장하는 weight versioning이 필요하다.
-
-즉, PipeDream은 연산 효율은 높지만 VRAM 사용량이 커진다.
-
-## Tensor Parallelism
-
-Tensor Parallelism은 layer를 통째로 나누지 않고, layer 안의 행렬 연산을 여러 GPU에 나누어 계산한다.
-
-대표 구현으로 Megatron-LM이 있다.
-
-Tensor Parallelism은 특히 Transformer의 큰 matrix multiplication을 나눌 때 사용된다.
-
-## Column Parallelism
-
-Column Parallelism은 weight matrix를 column 기준으로 나누는 방식이다.
-
-흐름은 다음과 같다.
-
-1. 동일한 input을 모든 GPU에 broadcast한다.
-2. 각 GPU가 자기 column shard에 대한 부분 계산을 수행한다.
-3. 결과를 all-gather로 합친다.
-
-계산은 비교적 독립적이지만, 결과를 모으는 gather 통신이 필요하다.
-
-## Row Parallelism
-
-Row Parallelism은 weight matrix를 row 기준으로 나누는 방식이다.
-
-흐름은 다음과 같다.
-
-1. input을 GPU별로 나눈다.
-2. 각 GPU가 자기 shard로 계산한다.
-3. 결과를 element-wise sum 또는 all-reduce로 결합한다.
-
-Row Parallelism은 출력 결합을 위해 reduce 통신이 필요하다.
-
-## Column vs Row
-
-Column Parallelism:
-
-- input은 broadcast
-- output은 gather
-- 통신 방식은 all-gather
-- 부분 계산은 독립적
-
-Row Parallelism:
-
-- input은 scatter
-- output은 reduce
-- 통신 방식은 all-reduce
-- 통신 효율을 잘 설계해야 함
-
-## 실제 서빙 관점
-
-LLM inference에서는 latency, throughput, GPU utilization이 모두 중요하다.
-
-현실에서는 단일 병렬화 방식만 쓰지 않는다. 보통 다음을 조합한다.
-
-- Pipeline Parallelism
-- Tensor Parallelism
-- Data Parallelism
-
-예를 들어 모델이 GPU 하나에 올라가지 않으면 PP 또는 TP를 사용하고, 요청 처리량을 늘리기 위해 DP를 함께 사용한다.
-
-## 정리
-
-- GPipe는 micro-batch로 pipeline bubble을 줄이지만 flush 구간이 남는다.
-- PipeDream은 1F1B로 GPU utilization을 높이지만 weight versioning 때문에 VRAM을 더 쓴다.
-- Tensor Parallelism은 layer 내부 연산을 나누어 대형 matrix 연산을 여러 GPU에서 처리한다.
-- 실제 시스템은 PP, TP, DP를 함께 사용한다.
-
-결국 핵심은 메모리, 통신 비용, latency 사이의 trade-off를 어떻게 조절하느냐다.
+이 글에서는 Model Training과 Inference에서 사용되는 다양한 Parallelism 전략을 정리한다.
+단순한 개념 설명이 아니라,
+각 방식이 어떤 병목을 해결하기 위해 등장했는지,
+그리고 실제 서빙 환경에서 어떤 trade-off를 가지는지를 중심으로 살펴본다.
+1. Pipeline Parallelism (PP)
+Pipeline Parallelism은 모델을 layer 단위로 분할하여 여러 GPU에 나누는 방식이다.
+단일 GPU로는 감당할 수 없는 대형 모델을 학습하거나 추론할 때 사용되며,
+특히 다음과 같은 상황에서 많이 사용된다.
+• 모델이 너무 커서 GPU 하나에 올라가지 않을 때
+• GPU를 더 활용해서 throughput을 올리고 싶을 때
+• Tensor Parallel보다 통신 비용을 줄이고 싶을 때
+하지만 구조적으로 다음과 같은 trade-off가 존재한다.
+Pipeline의 핵심 trade-off
+1. stage 간 타이밍이 맞지 않아 bubble time 발생
+2. 일부 GPU가 idle 상태가 되면서 utilization 감소
+3. 이를 줄이기 위해 micro-batch를 늘리면 activation memory 증가
+-> 즉, GPU 활용률을 올리려면 메모리를 더 써야 하는 구조
+1.1 GPipe
+이러한 문제를 해결하기 위해 등장한 것이 GPipe이다.
+핵심 아이디어
+• Batch를 Micro-batch로 분할
+• GPU 간 pipeline을 구성하여 병렬 처리
+![Pipeline/Tensor Parallelism image 1](https://blog.kakaocdn.net/dna/cV34OW/btsz1KWlruC/AAAAAAAAAAAAAAAAAAAAALu5KcbdISk9Ajyv4edwvIgqOn60cQvPZY77EM4Vzv-e/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1777561199&allow_ip=&allow_referer=&signature=kk0CzDtH2qFBtgCo3ls%2BcsQRZEk%3D)
+효과
+• Micro-batch 수 증가 → GPU idle 감소 (bubble 감소)
+• pipeline 병렬성 증가 → throughput 향상
+문제점
+• Pipeline 마지막에서 flush 발생
+• 해당 구간 동안 GPU가 아무 일도 하지 않음
+![Pipeline/Tensor Parallelism image 2](https://blog.kakaocdn.net/dna/KPrC5/btsz6f85vnk/AAAAAAAAAAAAAAAAAAAAABlL8YoaokuSkUJh1MZUMdatQbl0oNlamr2QYwIaZ53K/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1777561199&allow_ip=&allow_referer=&signature=ZqOavXIZj3bo9%2FHIBneld%2FYZ5hg%3D)
+→ 즉,
+• 메모리는 효율적
+• GPU utilization은 낮음
+1.2 PipeDream (1F1B)
+GPipe의 idle 문제를 해결하기 위해 등장한 방식
+핵심 아이디어
+• 1 Forward → 1 Backward 즉시 수행 (1F1B)
+• GPU가 idle 상태 없이 계속 작업 수행
+![Pipeline/Tensor Parallelism image 3](https://blogs.nvidia.co.kr/wp-content/uploads/sites/16/2021/05/%EC%BA%A1%EC%B2%984.jpg)
+효과
+• GPU utilization 증가
+• pipeline flush 제거
+문제점 (중요)
+• Forward / Backward 사이에 파라미터가 변경됨
+• → gradient inconsistency 발생
+해결 방법
+• 여러 버전의 parameter 저장 (weight versioning)
+Trade-off
+• 연산 효율 ↑
+• VRAM 사용량 ↑ (매우 큼)
+1.3 PP 정리
+GPipe: 메모리 효율적이지만 bubble이 많다.
+PipeDream: GPU 효율 높지만, VRAM 사용이 많다
+2. Tensor Parallelism (TP)
+Tensor Parallelism은 모델을 layer 단위가 아니라
+연산 단위 (tensor 단위)로 분할하는 방식이다.
+즉,
+• PP: layer 기준 분할 (세로)
+• TP: 연산 기준 분할 (가로)
+![Pipeline/Tensor Parallelism image 4](https://miro.medium.com/v2/resize:fit:1400/format:webp/0*pK_SrHVeKDgRvVnt.png)
+대표 구현: Megatron-LM
+2.1 Column Parallelism
+방식
+• Weight를 column 기준으로 분할
+• Input은 모든 GPU에 broadcast
+연산 흐름
+1. 동일한 input을 모든 GPU에 전달
+2. 각 GPU가 부분 계산 수행
+3. 결과를 All-Gather로 합침
+![Pipeline/Tensor Parallelism image 5](https://miro.medium.com/v2/resize:fit:1400/format:webp/0*cwEIjbnxwlpLFnWU.png)
+2.2 Row Parallelism
+방식
+• Weight를 row 기준으로 분할
+• Input을 GPU별로 나눔 (scatter)
+연산 흐름
+1. input을 분할하여 각 GPU에 전달
+2. 각 GPU에서 계산 수행
+3. 결과를 element-wise sum으로 결합
+![Pipeline/Tensor Parallelism image 6](https://miro.medium.com/v2/resize:fit:1400/format:webp/0*iehOFKm67UwJRZ9n.png)
+2.3 Column vs Row 비교
+Column Parallelism
+• 입력값은 broadcast
+• 출력값은 gather
+• 통신 방식은 All-Gather
+• 계산 독립적
+Row Parallelism
+• 입력값은 scatter
+• 출력값은 reduce
+• 통신 방식은 All-Reduce
+• 통신 효율적
+4. 실제 서빙 관점에서 중요한 포인트
+LLM Inference에서는 다음이 중요하다:
+• latency (응답 속도)
+• throughput (처리량)
+• GPU utilization
+→ 현실에서는 단일 방식이 아니라
+Hybrid 방식 사용
+• PP + TP + Data Parallelism
+대표 예:
+• Megatron-LM
+• DeepSpeed
+• vLLM
+5. 결론
+• GPipe → 메모리 효율
+• PipeDream → GPU 효율
+• Tensor Parallelism → 연산 효율
+→ 결국 핵심은
+메모리 vs 통신 vs latency trade-off를 어떻게 조절하느냐
+## 참고 자료
+- <https://yjoonjang.medium.com/분산-처리-3-pipeline-parallelism과-tensor-parallelism에-관하여-7b4420fe0281>

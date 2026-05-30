@@ -10,9 +10,9 @@ tags:
 source: "Notion PDF Export - Back propagation"
 ---
 
-![Backpropagation through a neural network](/assets/images/blog/backpropagation.svg)
+![backprop forward](/assets/images/blog/backprop-forward.png)
+![backprop backward](/assets/images/blog/backprop-backward.png)
 
-<small>Image: [Wikimedia Commons - Artificial neural network](https://commons.wikimedia.org/wiki/Special:FilePath/Artificial_neural_network.svg)</small>
 
 Backpropagation은 neural network가 loss를 줄이기 위해 각 weight를 얼마나 바꿔야 하는지 계산하는 방법이다. 핵심은 **chain rule**이다.
 
