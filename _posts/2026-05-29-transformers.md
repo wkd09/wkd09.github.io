@@ -11,15 +11,6 @@ tags:
 source: "Notion - Transformers"
 ---
 
-![transformer block](/assets/images/blog/transformer-block.png)
-![scaled dot product attention](/assets/images/blog/scaled-dot-product-attention.png)
-![attention vs mha](/assets/images/blog/attention-vs-mha.png)
-![multi head attention](/assets/images/blog/multi-head-attention.png)
-![masked self attention](/assets/images/blog/masked-self-attention.png)
-![transformer attention math](/assets/images/blog/transformer-attention-math.png)
-![positional encoding](/assets/images/blog/positional-encoding.png)
-![transformer architecture](/assets/images/blog/transformer-architecture.png)
-
 Transformer는 Google의 논문 **Attention Is All You Need**에서 제안된 모델이다. 기존의 seq2seq처럼 encoder-decoder 구조를 사용하지만, RNN 계열의 recurrent 구조 없이 attention만으로 시퀀스를 처리한다.
 
 핵심은 문장을 순서대로 하나씩 읽는 대신, 문장 안의 토큰들이 서로 어떤 관계를 갖는지 직접 계산한다는 점이다.
@@ -37,6 +28,9 @@ Transformer는 이 문제를 attention으로 풀었다. 토큰끼리의 관계�
 ## Encoder와 Decoder 구조
 
 Transformer는 크게 encoder와 decoder로 나뉜다.
+
+![transformer architecture](/assets/images/blog/transformer-architecture.png)
+![transformer block](/assets/images/blog/transformer-block.png)
 
 Encoder는 입력 문장을 이해해서 의미 벡터로 바꾼다. 각 encoder layer는 self-attention과 feed-forward network로 구성되고, 각 sub-layer에는 residual connection과 layer normalization이 붙는다.
 
@@ -62,6 +56,9 @@ Query와 Key의 유사도를 계산하면 어떤 토큰을 더 봐야 하는지 
 
 Scaled dot-product attention은 다음 흐름으로 동작한다.
 
+![scaled dot product attention](/assets/images/blog/scaled-dot-product-attention.png)
+![transformer attention math](/assets/images/blog/transformer-attention-math.png)
+
 1. 입력 embedding에서 Q, K, V를 만든다.
 2. Q와 K를 내적해 attention score를 구한다.
 3. score를 $\sqrt{d_k}$로 나눈다.
@@ -74,6 +71,9 @@ $\sqrt{d_k}$로 나누는 이유는 내적 값이 너무 커지는 것을 막기
 
 Multi-head attention은 attention을 한 번만 수행하지 않고 여러 head로 나누어 병렬로 수행한다.
 
+![multi head attention](/assets/images/blog/multi-head-attention.png)
+![attention vs mha](/assets/images/blog/attention-vs-mha.png)
+
 모델 차원이 `d`이고 head 수가 `h`라면, 각 head는 `d / h` 차원에서 attention을 계산한다. 이후 각 head의 결과를 concat하고 linear layer를 통과시킨다.
 
 이렇게 나누는 이유는 서로 다른 head가 서로 다른 관계를 학습할 수 있기 때문이다. 어떤 head는 주어와 동사의 관계를 보고, 다른 head는 목적어나 위치 정보를 볼 수 있다. 여러 의미 공간에서 관계를 본 뒤 다시 합치는 구조다.
@@ -82,6 +82,8 @@ Multi-head attention은 attention을 한 번만 수행하지 않고 여러 head�
 
 Transformer 안에서는 attention이 여러 방식으로 쓰인다.
 
+![masked self attention](/assets/images/blog/masked-self-attention.png)
+
 Encoder self-attention은 encoder 입력 안에서 토큰끼리 서로를 참고한다. `I love her`라는 문장이 있다면 각 토큰이 문장 안의 다른 모든 토큰을 볼 수 있다.
 
 Masked decoder self-attention은 decoder에서 사용된다. 생성 모델은 다음 단어를 예측할 때 미래 토큰을 보면 안 된다. 그래서 현재 위치 이후의 토큰을 mask 처리한다.
@@ -89,6 +91,7 @@ Masked decoder self-attention은 decoder에서 사용된다. 생성 모델은 �
 Encoder-decoder attention은 decoder가 encoder 출력을 참고하는 부분이다. decoder의 query가 encoder의 key, value를 바라보면서 입력 문장과 출력 문장의 관계를 학습한다.
 
 ## Positional Encoding
+![positional encoding](/assets/images/blog/positional-encoding.png)
 
 Transformer는 RNN처럼 순서대로 토큰을 처리하지 않는다. attention만 사용하면 토큰의 위치 정보가 사라진다. `나는 그녀를 사랑한다`와 `그녀는 나를 사랑한다`는 단어는 비슷하지만 순서에 따라 의미가 달라진다.
 

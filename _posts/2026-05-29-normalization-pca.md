@@ -10,11 +10,6 @@ tags:
 source: "Notion PDF Export - Normalization, PCA"
 ---
 
-![internal covariate shift](/assets/images/blog/internal-covariate-shift.png)
-![batch normalization](/assets/images/blog/batch-normalization.png)
-![normalization formulas](/assets/images/blog/normalization-formulas.png)
-![batch norm algorithm](/assets/images/blog/batch-norm-algorithm.png)
-
 ![Normalization and PCA](/assets/images/blog/normalization-pca.svg)
 
 <small>Image: [Wikimedia Commons - Gaussian scatter PCA](https://commons.wikimedia.org/wiki/Special:FilePath/GaussianScatterPCA.svg)</small>
@@ -24,6 +19,9 @@ Normalization은 학습을 안정적으로 만들기 위해 값의 분포를 조
 ## Batch Normalization
 
 Batch Normalization은 mini-batch 단위로 activation의 평균과 분산을 맞춘다.
+
+![batch normalization](/assets/images/blog/batch-normalization.png)
+![internal covariate shift](/assets/images/blog/internal-covariate-shift.png)
 
 $$
 \hat{x}_i
@@ -35,6 +33,9 @@ $$
 $$
 y_i = \gamma \hat{x}_i + \beta
 $$
+
+![normalization formulas](/assets/images/blog/normalization-formulas.png)
+![batch norm algorithm](/assets/images/blog/batch-norm-algorithm.png)
 
 Batch Normalization의 목적은 layer를 통과할 때 activation 분포가 계속 바뀌는 문제를 줄이는 것이다. 이를 internal covariate shift 관점에서 설명한다. 분포가 안정되면 더 큰 learning rate를 사용할 수 있고, 학습이 빨라지며, 어느 정도 regularization 효과도 생긴다.
 

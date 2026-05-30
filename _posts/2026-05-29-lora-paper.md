@@ -11,118 +11,206 @@ tags:
 source: "Notion PDF Export - LoRA"
 ---
 
-LoRA는 **Low-Rank Adaptation of Large Language Models** 논문에서 제안된 parameter-efficient fine-tuning 방법이다.
+# LoRA: Low-Rank Adaptation of Large Language Models
 
-대규모 언어 모델을 full fine-tuning하면 비용이 매우 크다. GPT-3 175B 같은 모델을 downstream task마다 통째로 fine-tuning하고 저장하는 것은 비현실적이다.
+> arXiv 2021. [[Paper](https://arxiv.org/abs/2106.09685)] [[Github](https://github.com/microsoft/LoRA)]
+> 
 
-LoRA는 사전학습된 weight는 고정하고, 작은 low-rank matrix만 학습해 이 문제를 줄인다.
+> Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen
+> 
 
-## 문제의식
+> Microsoft Corporation
+> 
 
-Full fine-tuning은 모델 전체 parameter를 업데이트한다.
+## 목적과 해결하고자 하는 문제
 
-이 방식은 성능은 좋을 수 있지만 다음 문제가 있다.
+- 대규모 사전학습 모델의 미세조정 비효율성: GPT-3 175B 같은 대규모 모델을 full fine-tuning하는 것은 비용이 매우 크고 GPU 효율도 낮다. 또한 다운스트림 태스크마다 독립 모델 인스턴스를 배포하는 비용이 크다.
+- 기존 효율적 방법의 한계: adapter, prefix tuning 같은 방식은 추론 지연을 유발하거나 사용 가능한 시퀀스 길이를 줄이고, 최적화 안정성에도 한계가 있다.
 
-- 학습 가능한 parameter 수가 너무 많다.
-- GPU 메모리 요구량이 크다.
-- task마다 별도 model checkpoint를 저장해야 한다.
-- 배포와 전환 비용이 크다.
+## 핵심 방법
 
-기존 parameter-efficient 방법으로 adapter, prefix tuning 등이 있었지만, 각각 한계가 있다.
+- low-rank adaptation: 사전학습 파라미터는 고정하고, Transformer 레이어에 학습 가능한 저랭크 행렬을 주입해 다운스트림 태스크 학습 파라미터를 줄인다.
+- 가중치 업데이트의 저랭크 가정: 사전학습 모델의 업데이트가 낮은 내재적 랭크를 가진다고 보고, 밀집 레이어의 변화량을 저랭크 분해로 학습한다.
 
-Adapter는 모델 중간에 layer를 추가하기 때문에 inference latency가 생길 수 있다. Prefix tuning은 input context 일부를 prefix로 사용하므로 실제 입력 길이를 희생할 수 있고, 최적화가 불안정할 수 있다.
+## 기여 및 혁신
 
-## LoRA의 핵심 아이디어
+- 매개변수 수 및 GPU 메모리 감소: GPT-3 175B 모델의 경우, 매개변수 10,000배, GPU 요구사항 3배까지 줄일 수 있다.
+- 추론 지연 없음: 배포 시 학습 가능한 행렬을 고정된 행렬에 병합 가능
+- 작업 전환 효율성: 다양한 task의 LoRA 모듈을 구축할 수 있으며, $A$와 $B$ 행렬을 교체하는 것 만으로 작업을 전환 가능
+- 학습 효율성 증가: Adam을 사용시 학습 효율성을 높이고 하드웨어 진입 장벽을 낮춘다
 
-LoRA는 weight update가 낮은 rank를 가진다고 가정한다.
+## 주요 결과
 
-기존 weight를 `W0`라고 할 때 full fine-tuning은 `W0 + ΔW`를 직접 학습한다. LoRA는 `ΔW`를 두 개의 작은 matrix 곱으로 표현한다.
+- LoRA의 우수한 성능: GPT-3 175B에서 다양한 데이터셋의 테스트에서 기존 방식보다 나은 성능을 보여준다
+- 낮은 랭크의 효과: GPT-3의 경우, 매우 작은 랭크 $r$로도 경쟁력있다. 이는 업데이트 행렬 $\Delta W$가 매우 작은 내재적 랭크를 가질 수 있음을 의미한다.
+
+## 한계점
+
+- 입력 배치 처리의 복잡성: 입력 배치를 서로 다른 작업에 대해 서로 다른 $A$와 $B$ 행렬로 처리하기 어렵다.
+- 가중치 행렬 선택 휴리스틱: 적용할 가중치 행렬을 선택하는데 주로 휴리스틱에 의존한다.
+
+## Abstract
+
+자연어 처리에서 중요한 패러다임은 일반 도메인에 대한 대규모 사전 학습과 특정 작업 또는 특정 도메인에 알맞게 학습 시키는 것 이다.
+
+Full fine-tuning은 큰 사전학습 모델에서 비효율적이다. 그래서 사전학습 가중치를 동결하고 학습 파라미터 수를 크게 줄이는 저랭크 adaptation, 즉 LoRA를 제안한다.
+
+LoRA는 학습 가능한 파라미터 수를 10000배, GPU 메모리 요구사항을 3배 줄일 수 있다. 
+
+LoRA는 모델 품질 면에서 미세조정보다 뛰어나거나 동일하고, 파라미터 수는 적고, 훈련 처리량은 높고, 추가적인 추론 지연이 없다.
+
+---
+
+## Introduction
+
+대규모 언어모델의 비효율적인 기존 방식인 full fine-tuning 문제를 해결하기 위해 low-rank adaptation (LoRA)을 제안한다. 기존 방식에 비해 파라미터 수와 메모리 사용량을 크게 줄이면서도 성능 유지하거나 개선한다.
+
+![lora overview](/assets/images/blog/lora.png)
+
+### LoRA의 장점
+
+- 사전학습 모델 한개만으로 저랭크 A, B를 다르게 둠으로 다양한 task에서 LoRA 구축 가능
+- adam 사용시 하드웨어 진입 장벽을 3배 낮춘다. 왜냐 작은 저랭크 행렬만 최적화하기 때문이다.
+- 단순한 선형 결합으로 추론 지연이 발생하지 않는다.
+
+### Terminologies
+
+본 논문은 Transformer 아키텍처를 자주 참조하고 크기에 대해 기존 용어를 사용한다.
+
+- $d_{model}$: Transformer 레이어의 입력 및 출력 차원 크기
+- $W_q$, $W_k$, $W_v$, $W_o$: self-attention 모듈에서 query, key, value, output 행렬
+- W 또는 $W_0$: 사전 학습된 가중치 행렬
+- $\Delta W$: adaptation 중 누적된 기울기 업데이트
+- $r$: LoRA 모듈의 rank
+
+---
+
+## Problem Statement
+
+풀 파인튜닝(Full fine-tuning)에서는 사전학습 가중치 $\Phi_0$로 초기화한 뒤 반복적으로 기울기를 업데이트해, 최종 파라미터가 $\Phi_0 + \Delta \Phi$가 된다.
 
 $$
-W = W_0 + BA
+ \max_{\Phi} \sum_{(x,y) \in Z} |y| \sum_{t=1} \log (P_{\Phi}(y_t|x, y_{<t})) 
 $$
 
-여기서:
+풀 파인튜닝의 단점중 하나는 다운스트림 작업에 대해 ∆Φ의 차원 |Φ0|와 같은 새로운 파라미터 세트 ∆Φ를 학습하는 것으로, 따라서 GPT-3(|Φ0| ≈ 1750억)와 큰 모델에선 파인튜닝된 모델을 저장이나 배포하는 것은 실현 가능하더라도 어려울 것이다. 
 
-- `W0`: 사전학습된 weight, 고정
-- `A`: 학습 가능한 low-rank matrix
-- `B`: 학습 가능한 low-rank matrix
-- `r`: rank, 매우 작은 값
-
-수식으로 보면 다음과 같다.
+하지만 LoRA는 파라미터를 효율적으로 접근하는 방식을 사용한다. LoRA는 다운 스트림 작업에 의해 발생하는 파라미터 변화량 ∆Φ를 학습하는 대신, 훨씬 작은 크기의 파라미터 집합 Θ를 통해 간접적으로 나타낸다. |Θ| << |Φ|를 만족하며, 작업별로 추가되는 학습 파라미터를 줄인다. 즉 사전 학습된 파라미터 ∆Φ는 고정하고 다운 스트림에 대한 적응은 Θ만으로 학습한다.
 
 $$
-B \in \mathbb{R}^{d \times r},
-\quad
-A \in \mathbb{R}^{r \times k},
-\quad
-r \ll \min(d, k)
+ \max_{\Theta} \sum_{(x,y) \in Z} |y| \sum_{t=1} \log (p_{\Phi_0+\Delta\Phi(\Theta)}(y_t|x, y_{<t})) 
 $$
 
-즉, 큰 matrix 전체를 학습하지 않고 작은 두 matrix만 학습한다.
+다음으로 $\Delta \Phi$를 인코딩하기 위해 계산 및 메모리 효율적인 저랭크(low-rank) 표현을 사용한다. GPT-3 175B에서는 학습 가능한 파라미터 $|\Theta|$를 $|\Phi_0|$의 0.01% 수준까지 줄일 수 있다.
 
-## Forward Pass
+---
 
-기존 linear layer가 다음과 같다면:
+## **Aren’t Existing Solutions Good Enough?**
+
+우리가 다루는 문제는 단순하지 않다. 전이 학습(transfer learning)이 본격적으로 사용된 이후, **모델 적응에 필요한 파라미터 수와 계산 비용을 줄이기 위한 다양한 방법**들이 제안되어 왔다.
+
+대표적인 예로는   어댑터 레이어(Adapter Layer)를 추가하는 방식과, **입력 활성화의 일부만을 학습하도록 구조를 최적화하는 방법**이 있다. 그러나 이들 접근법은 공통적으로 **대규모 모델 환경과 지연 시간(latency)에 민감한 추론 환경**에서는 한계를 가진다.
+
+---
+
+### **어댑터 레이어의 근본적인 한계**
+
+어댑터 방식의 가장 큰 문제는 **추론 지연을 유발한다는 점**이다.
+
+어댑터는 여러 변형이 존재한다.
+
+- 각 Transformer 블록마다 **두 개의 어댑터 레이어**를 추가하는 구조
+- 블록당 **하나의 어댑터 레이어와 추가적인 LayerNorm**을 사용하는 경량 구조
+
+레이어 수를 줄이거나 멀티태스킹 설정을 통해 지연 시간을 완화할 수는 있지만, **어댑터는 구조적으로 기존 모델에 새로운 레이어를 삽입**하기 때문에 **추가 연산 자체를 제거하는 것은 불가능**하다.
+
+---
+
+### **FLOPs가 적어도 느릴 수 있는 이유**
+
+어댑터는 병목 차원(bottleneck dimension)을 작게 설정하여 **전체 파라미터의 약 1%만 추가**하도록 설계되었다. 이로 인해 증가하는 FLOPs 또한 제한적이므로, 표면적으로는 연산 비용 증가가 크지 않아 보일 수 있다.
+
+하지만 **실제 추론 성능은 FLOPs 수가 아니라 하드웨어 병렬성 활용도에 의해 결정**된다.
+
+- 기존 Transformer의 선형 연산은 GPU의 높은 병렬성을 효과적으로 활용할 수 있다.
+- 반면, 어댑터 레이어는 **기존 연산 경로 중간에 순차적인 연산 단계를 추가**한다.
+
+이로 인해:
+
+- 병렬 실행이 제한되고
+- 추론 단계에서 **실질적인 지연 시간(latency)**이 증가한다.
+
+이 문제는 특히 **온라인 추론 환경**이나 **배치 크기가 1인 경우**에 더욱 두드러진다.
+
+---
+
+### **모델 샤딩 환경에서의 추가적인 문제**
+
+대규모 모델을 여러 GPU에 나누어 처리하는 **샤딩(sharding) 환경**에서는 문제가 더욱 심각해진다.
+
+어댑터 레이어가 추가되면 모델의 깊이가 증가하고, 그 결과 **GPU 간 동기화 연산**이 더 자주 필요해진다.
+
+구체적으로는 다음과 같은 통신 연산이 반복적으로 발생한다.
+
+- **AllReduce**: 모든 GPU의 값을 합하거나 평균 내어 다시 모든 GPU에 전달
+- **Broadcast**: 하나의 GPU가 가진 데이터를 모든 GPU로 전달
+
+이러한 GPU 간 통신은 계산 연산에 비해 **비용이 매우 크며**, 학습 및 추론 지연의 주요 원인이 된다.
+
+어댑터 파라미터를 각 GPU에 **중복 저장하여 통신을 회피**할 수는 있지만, 이는 **메모리 사용량을 크게 증가**시키므로 현실적인 해결책이 되기 어렵다.
+
+---
+
+### **Prefix Tuning의 한계**
+
+**Prefix tuning**은 모델 파라미터를 고정한 채, 입력 시퀀스 앞부분을 학습 가능한 prefix로 대체하는 방식이다.
+
+그러나 이 방법 역시 명확한 한계를 가진다.
+
+- 최적화가 **불안정**하며
+- 학습 파라미터 수 증가에 따라 성능이 **단조 증가하지 않는다**
+
+더 근본적인 문제는, **고정된 입력 길이 제약 하에서 prefix를 추가하면 그만큼 실제 입력 컨텍스트 길이를 희생해야 한다는 점**이다.
+
+이는 곧 다운스트림 작업에서 활용 가능한 정보가 줄어들며, **성능 저하로 직결**될 수 있다.
+
+![lora vs adapter vs prefix tuning](/assets/images/blog/lorascore.png)
+
+Adapter는 activation space에 비선형 모듈을 설치하고,
+
+Prefix tuning은 input space를 확장하며,
+
+LoRA는 parameter space에서 선형 subspace로 이동을 학습한다.
+
+## Method
+
+### 1. Low-Rank-Parameterized Update Matrices
+
+신경망에는 행렬 곱셈이 포함된 레이어가 많고, 이런 레이어는 일반적으로 full-rank를 갖는다. 특정 태스크 적응 시 사전학습 언어 모델은 더 작은 subspace에서도 효율적으로 학습될 수 있으며, 낮은 내재 차원(intrinsic dimension)을 가진다. 이에 따라 가중치 업데이트도 adaptation 중 낮은 intrinsic rank를 갖는다고 가정한다. 사전학습 가중치 행렬 $W_0 \in \mathbb{R}^{d \times k}$의 경우
 
 $$
-h = W_0x
-$$
-
-LoRA를 적용한 forward pass는 다음처럼 된다.
+W_0 + \Delta W = W_0 + BA \\
 
 $$
-h = W_0x + BAx
+
+$$
+\textrm{where} \quad B \in \mathbb{R}^{d \times r}, \quad A \in \mathbb{R}^{r \times k}, \quad r \ll \min (d, k)
 $$
 
-`W0`는 고정되어 있고, `A`, `B`만 학습된다.
+로 표현되어 업데이트를 제한한다. 여기서 r은 rank이다. 학습하는 동안 ${W}_0$는 고정되고 기울기 업데이트를 받지 않는 반면 A와 B는 학습 가능한 파라미터를 포함한다. $W_o$과 $\Delta W$ = $BA$는 모두 동일한 입력으로 곱해지고 각각의 출력 벡터는 좌표 방향으로 합산된다. $h = W_0x$인 경우 수정된 forward pass는 다음과 같다
 
-초기화에서는 보통 `A`를 random Gaussian으로 초기화하고 `B`를 0으로 초기화한다. 그러면 학습 시작 시점에는 `BA = 0`이므로 원래 모델 동작을 해치지 않는다.
+$$
+h = W_0 x + \Delta Wx = W_0 x + BAx
+$$
 
-## LoRA의 장점
+![lora reparameterization](/assets/images/blog/lora.png)
 
-LoRA의 장점은 명확하다.
+위 그림은 reparameterization을 설명한다. $A$는 랜덤 가우시안으로 초기화하고 $B$는 0으로 초기화하므로 학습 시작 시 $BA = 0$이다. 이후 $\Delta Wx$를 $a/r$로 스케일링한다. 여기서 $a$는 $r$에 대한 상수이며, 적절한 초기화가 되면 $a$를 조정하는 효과는 learning rate 조정과 유사하다. 이 스케일링은 $r$을 바꿀 때 하이퍼파라미터 재탐색 부담을 줄여준다.
 
-- 학습 parameter 수가 크게 줄어든다.
-- GPU 메모리 요구량이 줄어든다.
-- task별 adapter를 작게 저장할 수 있다.
-- 배포 시 `W0 + BA`를 merge하면 추가 inference latency가 없다.
-- task 전환 시 LoRA weight만 교체하면 된다.
+### 전체 fine-tuning의 일반화
 
-논문에서는 GPT-3 175B 기준으로 학습 가능한 parameter 수를 크게 줄이고, GPU 메모리 요구량도 낮출 수 있음을 보인다.
+보다 일반적인 형태의 fine-tuning을 통해 사전 학습된 파라미터의 부분집합을 학습할 수 있다. LoRA는 더 나아가 adaptation 중에 full-rank를 갖기 위해 가중치 행렬에 대한 누적 기울기 업데이트가 필요하지 않다. 즉, 모든 가중치 행렬에 LoRA를 적용하고 모든 바이어스를 학습할 때 LoRA rank r을 사전 학습된 가중치 행렬의 rank로 설정하여 전체 fine-tuning의 표현력을 대략적으로 복구한다. 즉, 학습 가능한 파라미터의 수가 증가함에 따라 LoRA 학습은 대략적으로 원래 모델을 학습으로 수렴되는 반면에 adapter 기반 방법은 MLP로, prefix 기반 방법은 긴 입력 시퀀스를 취할 수 없는 모델로 수행된다. 
 
-## Adapter, Prefix Tuning과의 차이
+### 추가적인 inference latency 없음
 
-Adapter는 activation space에 별도 module을 추가한다. 그래서 구조적으로 추가 연산이 생긴다.
-
-Prefix tuning은 input space를 확장한다. 하지만 context length 일부를 prefix가 차지한다.
-
-LoRA는 parameter space에서 update 방향을 low-rank subspace로 제한한다. 그래서 모델 구조를 크게 바꾸지 않고, inference 시 merge를 통해 latency 증가를 피할 수 있다.
-
-## 한계
-
-LoRA에도 한계는 있다.
-
-- 어떤 weight matrix에 LoRA를 적용할지 선택해야 한다.
-- rank `r`을 어떻게 잡을지 실험이 필요하다.
-- 하나의 batch 안에서 서로 다른 task의 LoRA module을 섞어 처리하기는 복잡할 수 있다.
-
-그래도 실용적으로는 LLM fine-tuning 비용을 크게 낮추는 강력한 방법이다.
-
-## 정리
-
-LoRA는 full fine-tuning의 비용 문제를 low-rank update로 해결한다.
-
-핵심은 다음과 같다.
-
-- 사전학습 weight는 고정한다.
-- `ΔW`를 `BA`로 분해해 작은 matrix만 학습한다.
-- 학습 parameter와 GPU 메모리를 줄인다.
-- merge하면 inference latency가 늘지 않는다.
-
-LLM을 특정 domain이나 task에 맞추고 싶지만 full fine-tuning 비용이 부담될 때 가장 먼저 고려할 만한 방법이다.
-
-## 참고
-
-- Paper: <https://arxiv.org/abs/2106.09685>
-- GitHub: <https://github.com/microsoft/LoRA>
+프로덕션 환경에 배포할 때, $W = W_0 + BA$를 명시적으로 계산 및 저장하고 평소와 같이 inference를 수행할 수 있다. $W_0$과 $BA$는 모두 $\mathbb{R}^{d \times k}$이다. 다른 다운 스트림 task로 전환해야 하는 경우 BA을 뺀 다음 다른 $B_0 A_0$를 추가하여 $W_0$을 복구할 수 있으며, 메모리 오버헤드가 거의 없는 빠른 연산이다. 결정적으로 이것은 fine-tuning된 모델과 비교하여 inference 중에 추가 latency를 도입되지 않도록 보장한다.

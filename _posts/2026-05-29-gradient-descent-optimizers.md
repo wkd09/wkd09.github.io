@@ -10,13 +10,6 @@ tags:
 source: "Notion PDF Export - Gradient Descent, Optimizer"
 ---
 
-![gradient descent surface](/assets/images/blog/gradient-descent-surface.png)
-![learning rate size](/assets/images/blog/learning-rate-size.png)
-![local minima](/assets/images/blog/local-minima.png)
-![momentum optimizer](/assets/images/blog/momentum-optimizer.png)
-![stochastic gradient descent](/assets/images/blog/stochastic-gradient-descent.png)
-![gradient descent batch](/assets/images/blog/gradient-descent-batch.png)
-
 ![Gradient descent curve](/assets/images/blog/gradient-descent.svg)
 
 <small>Image: [Wikimedia Commons - Gradient descent](https://commons.wikimedia.org/wiki/Special:FilePath/Gradient_descent.svg)</small>
@@ -34,6 +27,8 @@ $$
 
 Learning rate는 한 번 업데이트할 때 얼마나 크게 이동할지 정한다. 너무 작으면 학습이 매우 느리고, 너무 크면 최소점을 지나쳐 발산할 수 있다.
 
+![learning rate size](/assets/images/blog/learning-rate-size.png)
+
 좋은 learning rate는 빠르게 내려가면서도 안정적으로 수렴하는 값이다. 실제 학습에서는 scheduler를 사용해 초반에는 크게, 후반에는 작게 조절하기도 한다.
 
 학습 로그를 볼 때 loss가 거의 줄지 않으면 learning rate가 너무 작거나 gradient가 잘 전달되지 않는 상황일 수 있다. 반대로 loss가 갑자기 크게 튀거나 `NaN`이 나오면 learning rate가 너무 큰 경우가 많다.
@@ -44,11 +39,17 @@ Learning rate는 한 번 업데이트할 때 얼마나 크게 이동할지 정�
 
 최적화의 목표는 loss가 가장 낮은 global minimum을 찾는 것이다. 하지만 복잡한 모델에서는 loss landscape가 울퉁불퉁하기 때문에 local minimum이나 saddle point 근처에서 학습이 느려질 수 있다.
 
+![gradient descent surface](/assets/images/blog/gradient-descent-surface.png)
+![local minima](/assets/images/blog/local-minima.png)
+
 딥러닝에서는 파라미터 공간이 매우 크기 때문에 단순히 하나의 local minimum만 문제가 되는 것은 아니다. 평평하고 일반화가 잘 되는 영역으로 가는 것이 더 중요할 때가 많다.
 
 ## SGD
 
 Stochastic Gradient Descent는 전체 데이터가 아니라 일부 mini-batch로 gradient를 계산한다.
+
+![stochastic gradient descent](/assets/images/blog/stochastic-gradient-descent.png)
+![gradient descent batch](/assets/images/blog/gradient-descent-batch.png)
 
 장점은 계산이 빠르고, gradient noise가 있어 local minimum을 빠져나오는 데 도움이 될 수 있다는 점이다. 단점은 업데이트가 불안정할 수 있다는 점이다.
 
@@ -57,6 +58,8 @@ Mini-batch 크기도 optimizer의 동작에 영향을 준다. batch size가 작�
 ## Momentum
 
 Momentum은 이전 업데이트 방향을 일부 유지한다.
+
+![momentum optimizer](/assets/images/blog/momentum-optimizer.png)
 
 $$
 v_t = \gamma v_{t-1} + \eta \nabla_{\theta}J(\theta_t)

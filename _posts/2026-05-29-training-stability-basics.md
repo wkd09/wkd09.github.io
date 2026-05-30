@@ -10,14 +10,6 @@ tags:
 source: "Notion PDF Export - Activation Function, Variance & Bias, Overfitting"
 ---
 
-![activation functions](/assets/images/blog/activation-functions.png)
-![sigmoid](/assets/images/blog/sigmoid.png)
-![tanh](/assets/images/blog/tanh.png)
-![relu](/assets/images/blog/relu.png)
-![leaky relu](/assets/images/blog/leaky-relu.png)
-![bias variance curves](/assets/images/blog/bias-variance-curves.png)
-![bias variance target](/assets/images/blog/bias-variance-target.png)
-
 딥러닝 모델을 학습할 때는 모델 구조만 중요한 것이 아니다. 어떤 activation function을 쓰는지, 모델이 너무 단순하거나 복잡하지 않은지, 학습 데이터와 테스트 데이터 사이에서 일반화가 되는지도 중요하다.
 
 이 글에서는 activation function, bias-variance trade-off, overfitting과 underfitting을 함께 정리한다.
@@ -34,7 +26,10 @@ $$
 
 Activation function은 이 비선형성을 넣어주는 역할을 한다.
 
+![activation functions](/assets/images/blog/activation-functions.png)
+
 ## Sigmoid
+![sigmoid](/assets/images/blog/sigmoid.png)
 
 Sigmoid는 출력을 0과 1 사이로 만든다.
 
@@ -44,13 +39,16 @@ $$
 
 확률처럼 해석할 수 있어 이진 분류의 출력층에서 사용된다. 하지만 입력값이 너무 크거나 작으면 gradient가 거의 0이 되어 vanishing gradient 문제가 생길 수 있다.
 
+
 ## Tanh
 
 Tanh는 출력을 -1과 1 사이로 만든다.
+![tanh](/assets/images/blog/tanh.png)
 
 Sigmoid보다 출력 중심이 0에 가까워 학습이 조금 더 잘 될 수 있다. 하지만 여전히 vanishing gradient 문제가 있다.
 
 ## ReLU
+![relu](/assets/images/blog/relu.png)
 
 ReLU는 딥러닝에서 가장 널리 쓰이는 activation function이다.
 
@@ -63,6 +61,8 @@ $$
 단점은 입력이 음수인 경우 출력이 0이 되고 gradient도 흐르지 않는 dead neuron 문제가 생길 수 있다는 점이다.
 
 ## Leaky ReLU
+
+![leaky relu](/assets/images/blog/leaky-relu.png)
 
 Leaky ReLU는 ReLU의 dead neuron 문제를 완화하기 위해 음수 구간에도 작은 기울기를 남긴다.
 
@@ -83,6 +83,9 @@ Variance는 예측값이 얼마나 흩어져 있는지를 의미한다. Variance
 ## Bias-Variance Trade-off
 
 모델이 너무 단순하면 bias가 커지고 underfitting이 발생한다. 반대로 모델이 너무 복잡하면 variance가 커지고 overfitting이 발생한다.
+
+![bias variance curves](/assets/images/blog/bias-variance-curves.png)
+![bias variance target](/assets/images/blog/bias-variance-target.png)
 
 정리하면 다음과 같다.
 
