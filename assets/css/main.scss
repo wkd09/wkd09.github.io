@@ -163,6 +163,65 @@ body {
   font-size: 0.78rem !important;
 }
 
+.category-overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 2rem;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--lab-line);
+  border-radius: 8px;
+  color: var(--lab-navy);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none !important;
+  background: #ffffff;
+}
+
+.category-pill:hover,
+.category-pill:focus {
+  border-color: var(--lab-accent);
+  color: var(--lab-accent-dark);
+}
+
+.category-pill span {
+  color: var(--lab-muted);
+  font-size: 0.74rem;
+}
+
+.category-section {
+  margin: 2.4rem 0 0;
+}
+
+.category-section__heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 2px solid var(--lab-navy);
+}
+
+.category-section__heading h2 {
+  margin: 0;
+  color: var(--lab-navy);
+  font-size: 1.2rem;
+  letter-spacing: 0;
+}
+
+.category-section__heading span {
+  flex: 0 0 auto;
+  color: var(--lab-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .empty-state {
   padding: 1.25rem;
   border: 1px solid var(--lab-line);
@@ -225,6 +284,15 @@ figure.highlight {
   .blog-intro span {
     display: block;
     margin-top: 0.55rem;
+  }
+
+  .category-section__heading {
+    display: block;
+  }
+
+  .category-section__heading span {
+    display: block;
+    margin-top: 0.35rem;
   }
 
   .greedy-nav .visible-links a {
