@@ -51,6 +51,10 @@ GPU에는 여러 종류의 memory가 있다.
 - SRAM/shared memory: 용량은 작지만 매우 빠른 on-chip memory
 - register: 각 thread가 사용하는 가장 빠른 작은 저장 공간
 
+![FlashAttention의 memory hierarchy와 IO-aware attention 구조](/assets/images/blog/flashattn.png)
+
+*FlashAttention은 HBM에 큰 attention matrix를 저장하지 않고, SRAM에서 block 단위로 계산해 HBM read/write를 줄인다.*
+
 일반적인 attention 구현은 큰 중간 matrix를 HBM에 저장했다가 다시 읽는다. 이때 실제 병목은 `QK^T`를 계산하는 FLOPs보다 HBM read/write에서 생길 수 있다.
 
 FlashAttention의 핵심은 이 부분이다.
@@ -110,6 +114,10 @@ FlashAttention은 이를 해결하기 위해 online softmax를 사용한다.
 - 지금까지 본 score의 최대값
 - softmax denominator의 누적값
 - output의 누적값
+
+![FlashAttention의 block-wise online softmax 계산 흐름](/assets/images/blog/flash%20attn.webp)
+
+*각 score block은 SRAM에서 계산되고, denominator와 output을 누적 보정하면서 전체 softmax와 같은 결과를 유지한다.*
 
 새 block이 들어오면 기존 누적값을 새 최대값 기준으로 보정한 뒤 이어서 계산한다. 이렇게 하면 전체 score matrix를 저장하지 않아도, 모든 score를 본 것과 같은 softmax 결과를 만들 수 있다.
 
