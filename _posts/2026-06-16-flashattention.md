@@ -51,6 +51,10 @@ GPU에는 여러 종류의 memory가 있다.
 - SRAM/shared memory: 용량은 작지만 매우 빠른 on-chip memory
 - register: 각 thread가 사용하는 가장 빠른 작은 저장 공간
 
+![FlashAttention 원문 Figure: runtime과 sparsity speedup](/assets/images/blog/flashattention-paper-figure.png)
+
+*원 논문 Figure 2는 standard attention, FlashAttention, block-sparse FlashAttention의 runtime 차이를 비교한다.*
+
 ![FlashAttention의 memory hierarchy와 IO-aware attention 구조](/assets/images/blog/flashattn.png)
 
 *FlashAttention은 HBM에 큰 attention matrix를 저장하지 않고, SRAM에서 block 단위로 계산해 HBM read/write를 줄인다.*

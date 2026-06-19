@@ -38,6 +38,10 @@ source: "Notion PDF Export - BERT"
 
 - 대략적인 방법: 두가지 단계로 사전 학습과 미세 조정으로 구성된다. 사전 학습 동안 모델은 레이블 없는 데이터로 다양한 사전학습 태스크를 학습하고, 미세 조정시 사전 학습된 매개변수로 초기화된 Bert로 다운스트림 태스크의 레이블있는 데이터로 모든 매개 변수를 조정한다.
 
+![BERT 원문 Figure: input embedding 구성](/assets/images/blog/bert-paper-figure.png)
+
+*원 논문 Figure 2는 token, segment, position embedding이 합쳐져 BERT 입력이 만들어지는 방식을 보여준다.*
+
 ## Embedding
 
 ![bert embedding](/assets/images/blog/bertembedding.png)

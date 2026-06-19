@@ -33,6 +33,14 @@ SmoothQuant와 AWQ는 모두 LLM post-training quantization에서 **activation o
 
 즉 둘 다 activation statistics를 사용하지만, SmoothQuant는 activation quantization을 가능하게 만들고, AWQ는 weight quantization error를 줄인다.
 
+![SmoothQuant 원문 Figure: activation outlier가 weight로 이동하는 방식](/assets/images/blog/smoothquant-paper-figure.png)
+
+*원 논문 Figure 4는 SmoothQuant가 activation outlier를 weight 쪽으로 옮겨 quantization difficulty를 줄이는 모습을 보여준다.*
+
+![AWQ 원문 Figure: salient weights 보호와 per-channel scaling](/assets/images/blog/awq-paper-figure.png)
+
+*원 논문 Figure 2는 salient weight를 보호하거나 scaling하는 방식이 INT3 quantization 성능을 어떻게 바꾸는지 보여준다.*
+
 ## 왜 필요한가
 
 LLM inference에서 quantization을 하는 이유는 단순하다.

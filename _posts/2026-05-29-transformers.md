@@ -25,6 +25,10 @@ seq2seq는 encoder가 입력 문장을 하나의 context vector로 압축하고,
 
 Transformer는 이 문제를 attention으로 풀었다. 토큰끼리의 관계를 직접 계산해 필요한 정보를 가져오도록 만든 것이다.
 
+![Transformer 원문 Figure: scaled dot-product attention과 multi-head attention](/assets/images/blog/transformer-paper-figure.png)
+
+*원 논문 Figure 2는 scaled dot-product attention과 multi-head attention의 구조를 함께 보여준다.*
+
 ## Encoder와 Decoder 구조
 
 Transformer는 크게 encoder와 decoder로 나뉜다.

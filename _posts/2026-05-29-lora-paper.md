@@ -32,6 +32,10 @@ source: "Notion PDF Export - LoRA"
 - low-rank adaptation: 사전학습 파라미터는 고정하고, Transformer 레이어에 학습 가능한 저랭크 행렬을 주입해 다운스트림 태스크 학습 파라미터를 줄인다.
 - 가중치 업데이트의 저랭크 가정: 사전학습 모델의 업데이트가 낮은 내재적 랭크를 가진다고 보고, 밀집 레이어의 변화량을 저랭크 분해로 학습한다.
 
+![LoRA 원문 Figure: 저랭크 재파라미터화](/assets/images/blog/lora-paper-figure.png)
+
+*원 논문 Figure 1은 pre-trained weight에 저랭크 행렬 A와 B를 주입하는 핵심 아이디어를 보여준다.*
+
 ## 기여 및 혁신
 
 - 매개변수 수 및 GPU 메모리 감소: GPT-3 175B 모델의 경우, 매개변수 10,000배, GPU 요구사항 3배까지 줄일 수 있다.
