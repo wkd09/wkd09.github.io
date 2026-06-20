@@ -15,22 +15,7 @@ author_profile: true
 {% if engineering_posts.size > 0 %}
 <div class="post-list">
   {% for post in engineering_posts %}
-    <article class="post-list__item">
-      <div class="post-list__body">
-        <a class="post-list__title-link" href="{{ post.url | relative_url }}">
-          <h2>{{ post.title }}</h2>
-        </a>
-        <p class="post-list__meta">
-          {{ post.date | date: "%Y.%m.%d" }}
-          {% if post.tags.size > 0 %}
-            · {{ post.tags | join: ", " }}
-          {% endif %}
-        </p>
-        {% if post.excerpt %}
-          <p>{{ post.excerpt | strip_html | truncate: 120 }}</p>
-        {% endif %}
-      </div>
-    </article>
+    {% include post-list-item.html post=post %}
   {% endfor %}
 </div>
 {% else %}

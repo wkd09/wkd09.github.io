@@ -1,0 +1,52 @@
+{% assign post = include.post %}
+{% assign words_per_minute = post.words_per_minute | default: site.words_per_minute | default: 200 %}
+{% assign words = post.content | strip_html | number_of_words %}
+{% assign summary = post.content | markdownify | strip_html | normalize_whitespace | replace_first: post.title, "" | strip %}
+
+<article class="post-list__item" itemscope itemtype="https://schema.org/CreativeWork">
+  <div class="post-list__body">
+    {% if post.categories.size > 0 or post.tags.size > 0 %}
+      <div class="post-list__taxonomies" aria-label="글 분류">
+        {% for category in post.categories %}
+          {% case category %}
+            {% when "study" %}
+              {% assign category_label = "공부" %}
+            {% when "engineering" %}
+              {% assign category_label = "구현" %}
+            {% when "research" %}
+              {% assign category_label = "논문" %}
+            {% when "troubleshooting" %}
+              {% assign category_label = "트러블 슈팅" %}
+            {% else %}
+              {% assign category_label = category %}
+          {% endcase %}
+          <a class="post-list__pill post-list__pill--category" href="{{ site.category_archive.path | default: '/categories/' | relative_url }}#{{ category | slugify }}">{{ category_label }}</a>
+        {% endfor %}
+
+        {% for tag in post.tags limit: 4 %}
+          <a class="post-list__pill" href="{{ site.tag_archive.path | default: '/tags/' | relative_url }}#{{ tag | slugify }}">{{ tag }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <a class="post-list__title-link" href="{{ post.url | relative_url }}" itemprop="url">
+      <h2 itemprop="headline">{{ post.title }}</h2>
+    </a>
+
+    <div class="post-list__meta">
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: site.date_format }}</time>
+      <span aria-hidden="true">/</span>
+      <span>
+        {% if words < words_per_minute %}
+          1분 미만
+        {% else %}
+          약 {{ words | divided_by: words_per_minute }}분
+        {% endif %}
+      </span>
+    </div>
+
+    {% if summary != "" %}
+      <p class="post-list__excerpt" itemprop="description">{{ summary | truncate: 150 }}</p>
+    {% endif %}
+  </div>
+</article>

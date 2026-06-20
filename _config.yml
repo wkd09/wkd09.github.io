@@ -10,6 +10,8 @@ timezone: "Asia/Seoul"
 
 theme: "minimal-mistakes-jekyll"
 minimal_mistakes_skin: "default"
+date_format: "%Y.%m.%d"
+words_per_minute: 180
 
 plugins:
   - jekyll-include-cache
@@ -55,7 +57,11 @@ defaults:
     values:
       layout: single
       author_profile: true
+      show_date: true
       read_time: true
+      toc: true
+      toc_sticky: true
+      toc_label: "목차"
       comments: false
       share: true
       related: true
