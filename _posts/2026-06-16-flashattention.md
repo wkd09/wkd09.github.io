@@ -41,6 +41,10 @@ $$
 
 즉, attention은 단순히 계산량만 큰 것이 아니라 중간 matrix를 GPU memory에 쓰고 다시 읽는 비용도 크다.
 
+![GPT-2 attention에서 PyTorch와 FlashAttention fused kernel 비교](/assets/images/blog/flashattention-gpt2-fused-kernel.png)
+
+*FlashAttention은 attention 내부의 matmul, mask, softmax, dropout 같은 단계를 fused kernel로 처리해 중간 결과의 memory read/write를 줄인다.*
+
 ## GPU Memory Hierarchy
 
 FlashAttention을 이해하려면 GPU memory 구조를 먼저 봐야 한다.

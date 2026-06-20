@@ -14,6 +14,8 @@ source: "arXiv - AWQ, SmoothQuant"
 
 # AWQ와 SmoothQuant
 
+이 글은 SmoothQuant와 AWQ 두 논문을 함께 읽고 정리한 글이다. 두 논문은 모두 LLM post-training quantization에서 activation outlier가 만드는 문제를 다루지만, 목표와 적용 지점은 다르다.
+
 > SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models  
 > Guangxuan Xiao, Ji Lin, Mickael Seznec, Hao Wu, Julien Demouth, Song Han  
 > arXiv 2022. [[Paper](https://arxiv.org/abs/2211.10438)] [[Code](https://github.com/mit-han-lab/smoothquant)]
@@ -22,7 +24,7 @@ source: "arXiv - AWQ, SmoothQuant"
 > Ji Lin, Jiaming Tang, Haotian Tang, Shang Yang, Wei-Ming Chen, Wei-Chen Wang, Guangxuan Xiao, Xingyu Dang, Chuang Gan, Song Han  
 > arXiv 2023. [[Paper](https://arxiv.org/abs/2306.00978)]
 
-## 한 줄 정의
+## 1. 이 논문들이 다루는 문제
 
 SmoothQuant와 AWQ는 모두 LLM post-training quantization에서 **activation outlier가 만든 양자화 난이도를 channel-wise scaling으로 완화하는 방법**이다.
 
@@ -41,7 +43,7 @@ SmoothQuant와 AWQ는 모두 LLM post-training quantization에서 **activation o
 
 *원 논문 Figure 2는 salient weight를 보호하거나 scaling하는 방식이 INT3 quantization 성능을 어떻게 바꾸는지 보여준다.*
 
-## 왜 필요한가
+## 2. 왜 필요한가
 
 LLM inference에서 quantization을 하는 이유는 단순하다.
 
@@ -65,7 +67,7 @@ $$
 
 SmoothQuant와 AWQ는 이 문제를 정면으로 다룬다.
 
-## SmoothQuant 핵심 아이디어
+## 3. SmoothQuant 핵심 아이디어
 
 SmoothQuant의 목표는 모든 주요 matrix multiplication을 INT8로 실행하는 것이다. 이를 위해서는 weight뿐 아니라 activation도 INT8로 양자화해야 한다.
 
@@ -89,7 +91,7 @@ $$
 
 SmoothQuant에서 중요한 점은 weight가 activation보다 quantization에 강하다는 관찰이다. activation outlier를 그대로 INT8로 만들면 정확도가 크게 떨어지지만, 그 부담을 weight로 옮기면 weight는 상대적으로 잘 버틴다.
 
-## SmoothQuant의 smoothing factor
+### SmoothQuant의 smoothing factor
 
 논문은 migration strength를 조절하기 위해 $\alpha$를 사용한다.
 
@@ -104,7 +106,7 @@ $$
 
 따라서 SmoothQuant는 activation과 weight 사이에서 quantization difficulty를 적절히 나누는 방법이다.
 
-## AWQ 핵심 아이디어
+## 4. AWQ 핵심 아이디어
 
 AWQ는 SmoothQuant와 문제의 초점이 다르다. AWQ는 activation을 INT4나 INT8로 낮추는 것이 아니라, weight를 낮은 bit로 줄이는 weight-only quantization을 목표로 한다.
 
@@ -130,7 +132,7 @@ $$
 
 그래서 AWQ는 calibration data로 activation statistics를 모으고, activation 관점에서 중요한 weight channel을 찾는다.
 
-## Salient weight를 어떻게 보호하는가
+### Salient weight를 어떻게 보호하는가
 
 가장 단순한 방법은 중요한 weight 일부를 FP16으로 남기는 것이다. 하지만 이는 mixed precision이 되어 kernel 구현이 복잡해지고 hardware efficiency가 떨어진다.
 
@@ -148,7 +150,7 @@ $$
 
 AWQ가 중요한 이유는 이 과정을 backpropagation이나 layer reconstruction 없이 수행한다는 점이다. calibration data로 activation statistics를 수집하고, scale을 탐색한 뒤 weight를 quantize한다.
 
-## SmoothQuant와 AWQ 비교
+## 5. SmoothQuant와 AWQ 비교
 
 | 항목 | SmoothQuant | AWQ |
 | --- | --- | --- |
@@ -170,7 +172,7 @@ $$
 
 SmoothQuant는 activation을 quantize하기 쉽게 만들기 위해 $X$의 channel range를 줄인다. AWQ는 중요한 weight channel이 low-bit grid에서 덜 손상되도록 $W$ 쪽을 보호한다.
 
-## 직관적 설명
+## 6. 직관적 설명
 
 SmoothQuant는 activation outlier를 "weight 쪽으로 이사"시키는 방법이다.
 
@@ -180,7 +182,7 @@ AWQ는 "자주 세게 쓰이는 weight channel에 더 좋은 해상도를 주는
 
 어떤 weight가 작아 보여도, 그 weight에 곱해지는 activation이 크면 output에 미치는 영향은 커진다. AWQ는 이런 channel을 activation statistics로 찾아서, quantization 전에 scale을 키운다. 그러면 4bit grid에서도 중요한 weight가 덜 손상된다.
 
-## 주요 결과 해석
+## 7. 주요 결과 해석
 
 SmoothQuant 논문은 W8A8 quantization으로 큰 LLM에서도 정확도 손실을 작게 유지하면서 메모리 사용량과 inference cost를 줄일 수 있음을 보인다. arXiv abstract 기준으로 최대 1.56배 speedup과 2배 memory reduction을 보고하고, 530B 규모 모델을 single node에서 serving할 수 있다고 설명한다.
 
@@ -190,7 +192,7 @@ AWQ 논문은 salient weight의 약 1%만 잘 보호해도 quantization error를
 
 두 논문 모두 hardware-friendly quantization을 강조한다. 실제 serving에서 중요한 것은 이론적 bit-width만이 아니라, 해당 quantization format이 GPU kernel, memory layout, dequantization overhead와 잘 맞는지이다.
 
-## 실제 시스템과의 연결
+## 8. 실제 시스템과의 연결
 
 LLM serving 관점에서 두 방법은 쓰임새가 다르다.
 
@@ -205,7 +207,7 @@ AWQ는 weight memory가 병목인 환경에서 자연스럽다. 특히 on-device
 - batch가 큰 server serving인가, 작은 batch의 local inference인가?
 - 사용하는 inference engine이 해당 quantization kernel을 효율적으로 지원하는가?
 
-## 한계점
+## 9. 한계점
 
 SmoothQuant의 한계는 activation과 weight 사이의 migration strength를 잘 잡아야 한다는 점이다. 너무 많이 옮기면 weight quantization이 어려워지고, 너무 적게 옮기면 activation quantization 문제가 남는다. 또한 실제 speedup은 INT8 kernel 지원, operator fusion, framework integration에 크게 의존한다.
 
@@ -213,7 +215,7 @@ AWQ의 한계는 weight-only quantization이므로 activation memory와 activati
 
 두 방법 모두 calibration data에 의존한다. 학습은 하지 않지만, activation statistics를 추정해야 하므로 calibration sample이 실제 inference distribution과 너무 다르면 최적 scale이 덜 맞을 수 있다.
 
-## 내가 이해한 점
+## 정리
 
 SmoothQuant와 AWQ는 모두 "LLM quantization에서는 소수의 activation outlier가 전체 quantization range를 망가뜨릴 수 있다"는 사실에서 출발한다.
 
@@ -228,3 +230,13 @@ AWQ는 activation outlier를 직접 quantize하지 않는다. 대신 activation�
 > SmoothQuant는 activation quantization을 가능하게 만들기 위한 smoothing이고, AWQ는 weight-only quantization에서 중요한 weight channel을 보호하기 위한 smoothing이다.
 
 이 차이를 알고 보면 두 논문은 서로 경쟁하는 방법이라기보다, 서로 다른 serving 조건을 겨냥한 quantization 설계로 이해하는 편이 맞다.
+
+## 한 줄 요약
+
+SmoothQuant는 activation outlier를 weight 쪽으로 옮겨 W8A8 quantization을 가능하게 만들고, AWQ는 activation statistics로 중요한 weight channel을 보호해 low-bit weight-only quantization의 손실을 줄인다.
+
+## 참고 자료
+
+- Guangxuan Xiao et al., [SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models](https://arxiv.org/abs/2211.10438), ICML 2023.
+- Ji Lin et al., [AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration](https://arxiv.org/abs/2306.00978), MLSys 2024.
+- [mit-han-lab/smoothquant](https://github.com/mit-han-lab/smoothquant)

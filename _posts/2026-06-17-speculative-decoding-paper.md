@@ -15,16 +15,18 @@ source: "arXiv:2211.17192"
 
 # Fast Inference from Transformers via Speculative Decoding
 
+이 글은 논문 [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192)을 바탕으로 정리한 글이다.
+
 > Yaniv Leviathan, Matan Kalman, Yossi Matias  
 > arXiv 2022, ICML 2023 Oral. [[Paper](https://arxiv.org/abs/2211.17192)]
 
-## 한 줄 정의
+## 1. 이 논문이 다루는 문제
 
 Speculative Decoding은 **작은 근사 모델이 여러 토큰을 먼저 제안하고, 큰 타깃 모델이 그 제안을 한 번에 검증해서 autoregressive decoding의 직렬 병목을 줄이는 방법**이다.
 
 중요한 점은 단순히 빠른 근사 생성을 하는 것이 아니라, 최종 출력 분포가 큰 모델만으로 샘플링했을 때와 같도록 보장한다는 것이다.
 
-## 왜 필요한가
+## 2. 왜 필요한가
 
 Autoregressive Transformer는 토큰을 하나씩 생성한다.
 
@@ -46,7 +48,7 @@ prefix + token 1 + token 2 -> token 3
 - 여러 토큰을 한 번의 target model 검증으로 처리한다.
 - memory bandwidth 병목이 있는 환경에서 남는 연산 병렬성을 활용한다.
 
-## 핵심 아이디어
+## 3. 핵심 아이디어
 
 논문에서는 두 모델을 둔다.
 
@@ -67,7 +69,7 @@ prefix + token 1 + token 2 -> token 3
 
 직관적으로는 CPU의 branch prediction과 비슷하다. 작은 모델이 "아마 다음 토큰들은 이럴 것"이라고 예측하고, 큰 모델이 그 예측이 자기 분포와 양립 가능한지 확인한다.
 
-## Speculative Sampling
+## 4. Speculative Sampling
 
 가장 중요한 부분은 "빠르지만 결과가 바뀌면 안 된다"는 제약이다.
 
@@ -89,7 +91,7 @@ $$
 
 즉 speculative decoding은 approximate decoding이 아니다. 작은 모델을 쓰지만 최종 샘플링 분포는 target model의 분포를 유지한다.
 
-## 알고리즘 흐름
+## 5. 알고리즘 흐름
 
 한 step을 단순화하면 다음과 같다.
 
@@ -104,7 +106,7 @@ $$
 
 매 iteration은 적어도 하나의 토큰을 생성한다. 따라서 최악의 경우에도 큰 모델을 일반 autoregressive decoding보다 더 많이 순차 호출하지는 않는다. 작은 모델의 제안이 잘 맞을수록 한 번의 큰 모델 호출에서 여러 토큰을 전진할 수 있다.
 
-## 성능을 결정하는 값
+## 6. 성능을 결정하는 값
 
 논문에서 성능을 이해하는 핵심 변수는 두 가지다.
 
@@ -131,7 +133,7 @@ $$
 
 이 식에서 볼 수 있듯이, $\gamma$를 무작정 크게 잡는다고 항상 좋아지는 것은 아니다. 작은 모델을 여러 번 돌리는 비용이 있고, reject가 자주 일어나면 speculative computation이 낭비된다.
 
-## 실험 결과
+## 7. 실험 결과
 
 논문은 T5-XXL, LaMDA, GPT-like 모델 등에서 speculative decoding을 평가한다.
 
@@ -145,7 +147,7 @@ $$
 
 흥미로운 점은 이 방법이 연산량 자체를 항상 줄이는 것은 아니라는 점이다. 오히려 target model을 여러 prefix에 대해 병렬 평가하므로 총 FLOPs는 증가할 수 있다. 대신 decode가 memory bandwidth나 communication에 묶여 있고 병렬 연산 자원이 남아 있는 상황에서는 wall-clock latency가 줄어든다.
 
-## 기존 Decoding과의 차이
+## 8. 기존 Decoding과의 차이
 
 일반 decoding은 큰 모델이 매 토큰마다 한 번씩 실행된다.
 
@@ -165,7 +167,7 @@ accept several tokens or correct at first reject
 
 이 차이는 serving 관점에서 중요하다. 모델의 파라미터와 KV cache를 매 토큰마다 반복적으로 읽는 비용을 줄일 수 있기 때문이다. 즉 이 논문은 decoding을 "계산량 줄이기"보다 "직렬 실행을 병렬 검증으로 바꾸기"에 가깝게 바라본다.
 
-## 한계점
+## 9. 한계점
 
 첫 번째 한계는 충분한 병렬 연산 자원이 필요하다는 점이다. target model을 $\gamma + 1$개 prefix에 대해 병렬 평가해야 하므로, GPU가 이미 compute-bound라면 이득이 작거나 사라질 수 있다.
 
@@ -175,7 +177,7 @@ accept several tokens or correct at first reject
 
 네 번째는 strict한 distribution 보장을 유지하면 추가적인 근사 최적화 여지가 제한된다. 논문 부록에서는 lenience를 허용하면 더 빨라질 수 있음을 다루지만, 이 경우 "완전히 같은 분포"라는 강한 장점은 약해진다.
 
-## 실제 시스템과의 연결
+## 10. 실제 시스템과의 연결
 
 LLM serving에서 speculative decoding은 decode latency를 줄이는 대표적인 방법이다.
 
@@ -188,7 +190,7 @@ LLM serving에서 speculative decoding은 decode latency를 줄이는 대표적�
 
 최근 LLM serving 시스템에서는 speculative decoding이 KV cache 관리, continuous batching, paged attention, quantization과 함께 쓰일 수 있다. 다만 이 방법은 attention kernel 자체를 빠르게 만드는 기술이 아니라 decoding algorithm의 직렬성을 줄이는 기술이다.
 
-## 내가 이해한 점
+## 정리
 
 이 논문의 핵심은 "작은 모델로 대충 생성한다"가 아니다. 핵심은 작은 모델의 제안을 **큰 모델 분포를 보존하는 방식으로 검증하고 보정한다**는 점이다.
 
@@ -199,3 +201,11 @@ LLM serving에서 speculative decoding은 decode latency를 줄이는 대표적�
 정리하면 speculative decoding은 다음 문장으로 기억할 수 있다.
 
 > 작은 모델이 길을 먼저 그려 보고, 큰 모델이 그 길을 한 번에 검문한다. 단, 틀린 길은 수학적으로 보정해서 큰 모델만 썼을 때의 분포를 유지한다.
+
+## 한 줄 요약
+
+Speculative Decoding은 작은 모델이 draft token을 만들고 큰 모델이 이를 병렬로 검증해, target model의 출력 분포를 유지하면서 autoregressive decoding의 순차 병목을 줄이는 방법이다.
+
+## 참고 자료
+
+- Yaniv Leviathan et al., [Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192), ICML 2023.

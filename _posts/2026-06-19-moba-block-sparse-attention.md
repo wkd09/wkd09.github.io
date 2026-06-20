@@ -15,39 +15,17 @@ source: "arXiv:2502.13189, MoonshotAI/MoBA"
 
 # MoBA: Long-Context LLM을 위한 Block Sparse Attention 이해하기
 
+이 글은 논문 [MoBA: Mixture of Block Attention for Long-Context LLMs](https://arxiv.org/abs/2502.13189)와 [MoonshotAI/MoBA 공식 GitHub](https://github.com/MoonshotAI/MoBA)를 바탕으로 정리한 글이다.
+
 LLM에서 context length를 늘리는 일은 매력적이다. 긴 문서, 여러 파일로 된 코드베이스, 긴 대화 기록, 대규모 RAG 결과를 한 번에 넣을 수 있기 때문이다.
 
 하지만 Transformer의 standard full attention은 sequence length가 길어질수록 비용이 빠르게 커진다. 이 글에서는 MoBA(Mixture of Block Attention)가 이 문제를 어떻게 풀려고 하는지, Sparse Attention과 Linear Attention과는 무엇이 다른지, 그리고 실제 LLM serving 관점에서 어떤 trade-off가 있는지 정리한다.
 
+논문의 핵심은 간단하다. 모든 token을 모든 token에 attention하지 말고, sequence를 block으로 나눈 뒤 query마다 관련 있는 block만 골라 attention하자는 것이다. MoBA는 이를 위해 block-level routing과 top-k gating을 사용한다.
+
 ![MoBA 논문 Figure 1a: Full Attention, Sparse Attention, MoBA의 비교](/assets/images/blog/moba-fig1a.webp)
 
 *MoBA는 모든 token을 보는 full attention과 달리, query별로 관련 block을 선택해 attention을 수행한다.*
-
-## 참고 자료에서 먼저 확인한 사실
-
-블로그 본문에 들어가기 전에, 논문과 공식 GitHub README에서 확인한 사실을 먼저 분리해 둔다. 아래 항목은 공개 자료 기준으로 확인 가능한 내용이다.
-
-- MoBA는 `MoBA: Mixture of Block Attention for Long-Context LLMs`라는 제목으로 공개된 논문이다. 논문은 attention에 Mixture of Experts(MoE)의 routing 아이디어를 적용한 구조로 MoBA를 설명한다.
-- 논문은 long-context LLM의 핵심 병목 중 하나로 full attention의 quadratic computational complexity를 지적한다.
-- 논문은 기존 대안으로 sink/window attention 같은 구조적 sparse attention과 linear approximation 계열 attention을 언급한다.
-- MoBA는 sequence를 고정 길이 block으로 나누고, 각 block의 key vector를 평균내어 block-level 대표 key를 만든다.
-- query는 block 대표 key들과 dot product score를 계산하고, top-k gating으로 관련 block을 선택한다.
-- 선택된 block 내부에서는 실제 token-level K/V에 대해 attention을 수행한다.
-- causal language modeling을 위해 future block은 선택 대상에서 제외하고, current block은 반드시 attention 대상에 포함한다.
-- 공식 GitHub README는 MoBA를 `Trainable Block Sparse Attention`이라고 설명하며, `Parameter-less Gating Mechanism`과 full attention에서 sparse attention으로 전환 가능한 구조를 강조한다.
-- 공식 GitHub README는 MoBA가 pretrained model에 attention만 바꿔 바로 적용하는 drop-in inference trick이 아니며, continue training이 필요하다고 설명한다.
-- GitHub README는 CUDA kernel 구현과 flash-attn 의존성을 언급한다. 다만 공개 자료만으로 vLLM이나 SGLang에 공식 통합되었다고 단정하기는 어렵다.
-
-## 목차
-
-1. 왜 Long-Context Attention이 문제가 되는가
-2. Sparse Attention과 Linear Attention의 차이
-3. MoBA의 핵심 아이디어
-4. Top-k Gating은 어떻게 동작하는가
-5. MoBA는 왜 추가 학습이 필요한가
-6. 기술적 한계와 Trade-off
-7. LLM Serving 관점에서의 의미
-8. 정리
 
 ## 1. 왜 Long-Context Attention이 문제가 되는가
 
@@ -400,7 +378,7 @@ Repository context
 
 물론 이것도 연구 아이디어다. 공개 자료 기준으로 MoBA가 repo-level code analysis에 대해 어떤 성능을 보이는지는 단정하기 어렵다.
 
-## 8. 정리
+## 정리
 
 MoBA는 long-context LLM에서 full attention의 quadratic bottleneck을 줄이려는 block sparse attention 구조다. Linear attention처럼 attention 계산식을 크게 바꾸기보다는, 기존 attention의 형태를 유지하면서 query별로 볼 block을 줄이는 쪽에 가깝다.
 
@@ -415,6 +393,10 @@ block 대표 key로 먼저 관련 block을 고른 뒤,
 하지만 이 간단한 아이디어를 실제 모델과 serving system에 넣는 일은 단순하지 않다. top-k, block size, causal masking, current block 포함, kernel 구현, KV cache layout, continue training이 모두 얽힌다.
 
 그래서 MoBA는 "바로 가져다 쓰는 inference trick"이라기보다, long-context LLM을 위한 attention architecture 설계라고 보는 편이 정확하다.
+
+## 한 줄 요약
+
+MoBA는 long-context LLM에서 sequence를 block으로 나누고 query별 top-k block만 선택해 attention함으로써, full attention의 비용을 줄이려는 trainable block sparse attention 구조다.
 
 ## 핵심 요약
 
