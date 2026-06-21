@@ -16,7 +16,15 @@
   --lab-line: rgba(20, 20, 19, 0.26);
   --lab-line-strong: #141413;
   --lab-soft: #f1eee7;
-  --lab-code: #eeeae1;
+  --lab-code: #f4efe6;
+  --lab-code-ink: #1f2937;
+  --lab-code-muted: #6b7280;
+  --lab-code-keyword: #075985;
+  --lab-code-string: #166534;
+  --lab-code-number: #b45309;
+  --lab-code-function: #6d28d9;
+  --lab-code-variable: #be123c;
+  --lab-code-operator: #334155;
   --lab-accent: #141413;
   --lab-accent-soft: #ebe7dc;
   --lab-clay: #9f6b4a;
@@ -799,6 +807,13 @@ figure.highlight {
   overflow: hidden;
 }
 
+div.highlighter-rouge .highlight,
+figure.highlight .highlight,
+.highlight {
+  background: transparent;
+  color: var(--lab-code-ink);
+}
+
 div.highlighter-rouge pre,
 figure.highlight pre,
 .highlight pre {
@@ -809,6 +824,7 @@ figure.highlight pre,
   font-size: 0.86rem;
   line-height: 1.65;
   tab-size: 2;
+  color: var(--lab-code-ink);
 }
 
 div.highlighter-rouge code,
@@ -817,7 +833,99 @@ figure.highlight code,
   padding: 0;
   border: 0;
   background: transparent;
+  color: inherit;
   font-size: inherit;
+}
+
+.highlight .c,
+.highlight .ch,
+.highlight .cm,
+.highlight .cp,
+.highlight .cpf,
+.highlight .c1,
+.highlight .cs {
+  color: var(--lab-code-muted);
+  font-style: italic;
+}
+
+.highlight .k,
+.highlight .kc,
+.highlight .kd,
+.highlight .kn,
+.highlight .kp,
+.highlight .kr,
+.highlight .kt,
+.highlight .ow {
+  color: var(--lab-code-keyword);
+  font-weight: 700;
+}
+
+.highlight .s,
+.highlight .sa,
+.highlight .sb,
+.highlight .sc,
+.highlight .dl,
+.highlight .sd,
+.highlight .s2,
+.highlight .se,
+.highlight .sh,
+.highlight .si,
+.highlight .sx,
+.highlight .sr,
+.highlight .s1,
+.highlight .ss {
+  color: var(--lab-code-string);
+}
+
+.highlight .m,
+.highlight .mb,
+.highlight .mf,
+.highlight .mh,
+.highlight .mi,
+.highlight .mo,
+.highlight .il {
+  color: var(--lab-code-number);
+}
+
+.highlight .n,
+.highlight .no,
+.highlight .nd,
+.highlight .ni,
+.highlight .nl,
+.highlight .nx,
+.highlight .py,
+.highlight .nt,
+.highlight .w {
+  color: var(--lab-code-ink);
+}
+
+.highlight .nf,
+.highlight .fm,
+.highlight .nc,
+.highlight .nn {
+  color: var(--lab-code-function);
+  font-weight: 700;
+}
+
+.highlight .na,
+.highlight .nb,
+.highlight .bp,
+.highlight .nv,
+.highlight .vc,
+.highlight .vg,
+.highlight .vi,
+.highlight .vm {
+  color: var(--lab-code-variable);
+}
+
+.highlight .o,
+.highlight .p {
+  color: var(--lab-code-operator);
+}
+
+.highlight .err {
+  color: #991b1b;
+  background: rgba(220, 38, 38, 0.1);
 }
 
 .notice,

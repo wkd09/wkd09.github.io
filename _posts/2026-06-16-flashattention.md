@@ -1,5 +1,5 @@
 ---
-title: "FlashAttention 정리: Attention 병목을 IO 관점에서 줄이는 방법"
+title: "FlashAttention-1 논문 정리: IO-Aware Exact Attention"
 date: 2026-06-16 00:00:00 +0900
 categories:
   - engineering
@@ -9,289 +9,296 @@ tags:
   - Transformer
   - Attention
   - GPU
-source: "Draft - FlashAttention"
+source: "arXiv:2205.14135 - FlashAttention"
 ---
 
-Transformer에서 attention은 가장 중요한 연산 중 하나지만, sequence length가 길어질수록 비용이 빠르게 커진다.
+Transformer에서 attention은 핵심 연산이지만, sequence length가 길어질수록 비용이 빠르게 커진다.
 
-특히 LLM에서 context length를 늘리거나 batch size를 키우면 attention이 학습과 추론의 병목이 되기 쉽다. FlashAttention은 이 병목을 단순히 연산량 관점이 아니라 **GPU memory IO 관점**에서 해결하려는 방법이다.
-
-이 글에서는 FlashAttention이 왜 필요한지, 어떤 방식으로 memory access를 줄이는지, 그리고 일반 attention과 어떤 차이가 있는지 정리한다.
-
-## 기존 Attention의 문제
-
-Scaled dot-product attention은 보통 다음과 같이 계산한다.
+기본 scaled dot-product attention은 다음과 같다.
 
 $$
-Attention(Q, K, V)
-= softmax\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+S = QK^T,\quad P = softmax(S),\quad O = PV
 $$
 
-여기서 `Q`, `K`, `V`는 각각 query, key, value이다.
+여기서 `Q`, `K`, `V`는 각각 query, key, value이고, `S`와 `P`는 `N x N` 크기의 attention matrix다. 문제는 이 `N x N` 중간 matrix를 GPU memory에 실제로 저장하고 다시 읽는 과정이다.
 
-계산 흐름은 단순하게 보면 다음과 같다.
+FlashAttention 논문의 핵심은 간단하다.
 
-1. `QK^T`를 계산해 attention score matrix를 만든다.
-2. score에 softmax를 적용한다.
-3. softmax 결과에 `V`를 곱해 output을 만든다.
+> Attention을 근사하지 않고 정확하게 계산하되, GPU HBM read/write를 줄이도록 알고리즘을 다시 짜자.
 
-문제는 `QK^T` 결과가 sequence length 기준으로 `N x N` 크기라는 점이다.
-
-예를 들어 sequence length가 `4096`이면 attention score matrix는 `4096 x 4096` 크기가 된다. head와 batch까지 고려하면 중간 결과가 매우 커진다.
-
-즉, attention은 단순히 계산량만 큰 것이 아니라 중간 matrix를 GPU memory에 쓰고 다시 읽는 비용도 크다.
-
-![GPT-2 attention에서 PyTorch와 FlashAttention fused kernel 비교](/assets/images/blog/flashattention-gpt2-fused-kernel.png)
-
-*FlashAttention은 attention 내부의 matmul, mask, softmax, dropout 같은 단계를 fused kernel로 처리해 중간 결과의 memory read/write를 줄인다.*
-
-## GPU Memory Hierarchy
-
-FlashAttention을 이해하려면 GPU memory 구조를 먼저 봐야 한다.
-
-GPU에는 여러 종류의 memory가 있다.
-
-- HBM: 용량은 크지만 상대적으로 느린 global memory
-- SRAM/shared memory: 용량은 작지만 매우 빠른 on-chip memory
-- register: 각 thread가 사용하는 가장 빠른 작은 저장 공간
+즉 FlashAttention-1은 sparse attention이나 linear attention처럼 attention 자체를 근사하는 방법이 아니다. 결과는 standard attention과 같고, 계산 순서와 memory access 방식을 바꾼다.
 
 ![FlashAttention 원문 Figure: runtime과 sparsity speedup](/assets/images/blog/flashattention-paper-figure.png)
 
-*원 논문 Figure 2는 standard attention, FlashAttention, block-sparse FlashAttention의 runtime 차이를 비교한다.*
+*원 논문 Figure 2는 standard attention과 FlashAttention의 HBM access, runtime 차이를 보여준다.*
 
-![FlashAttention의 memory hierarchy와 IO-aware attention 구조](/assets/images/blog/flashattn.png)
+## 왜 FLOPs만 보면 부족한가
 
-*FlashAttention은 HBM에 큰 attention matrix를 저장하지 않고, SRAM에서 block 단위로 계산해 HBM read/write를 줄인다.*
+딥러닝 연산 성능을 볼 때 흔히 FLOPs를 먼저 본다. 하지만 GPU에서는 FLOPs만으로 실제 속도가 결정되지 않는다.
 
-일반적인 attention 구현은 큰 중간 matrix를 HBM에 저장했다가 다시 읽는다. 이때 실제 병목은 `QK^T`를 계산하는 FLOPs보다 HBM read/write에서 생길 수 있다.
+GPU memory hierarchy는 대략 다음처럼 볼 수 있다.
 
-FlashAttention의 핵심은 이 부분이다.
+- HBM: GPU global memory. 용량은 크지만 상대적으로 느리다.
+- SRAM/shared memory: GPU chip 안의 작은 memory. 용량은 작지만 훨씬 빠르다.
+- Register: thread가 직접 쓰는 가장 빠른 작은 저장 공간.
 
-> attention을 더 빠르게 하려면 계산량만 볼 것이 아니라, GPU memory 사이에서 데이터를 얼마나 읽고 쓰는지도 봐야 한다.
+논문은 A100 기준으로 HBM bandwidth는 약 `1.5-2.0TB/s`, on-chip SRAM bandwidth는 약 `19TB/s`라고 설명한다. SRAM은 HBM보다 훨씬 빠르지만, 크기가 매우 작다.
 
-이런 관점을 **IO-aware**하다고 표현한다.
+그래서 attention을 빠르게 만들려면 단순히 곱셈 수만 줄이는 것이 아니라, HBM에 무엇을 쓰고 다시 읽는지도 봐야 한다. 논문은 이 관점을 **IO-aware**라고 부른다.
+
+## Standard Attention의 병목
+
+일반적인 attention 구현은 다음 순서로 동작한다.
+
+```text
+Q, K를 읽어 S = QK^T 계산
+S를 HBM에 저장
+S를 다시 읽어 P = softmax(S) 계산
+P를 HBM에 저장
+P와 V를 읽어 O = PV 계산
+O를 HBM에 저장
+```
+
+여기서 `S`와 `P`가 모두 `N x N` matrix다.
+
+sequence length가 `N = 4096`이면 `S` 하나만 해도 약 1,677만 개 원소를 가진다. batch와 head까지 붙으면 훨씬 커진다.
+
+더 나쁜 점은 `S`와 `P`를 한 번 만드는 데서 끝나지 않는다는 것이다. masking, softmax, dropout, backward pass를 위해 중간 값을 HBM에 저장하고 다시 읽는다. Attention의 이론적 계산량도 크지만, 실제 runtime에서는 이 HBM traffic이 큰 병목이 된다.
+
+논문에서 비교한 GPT-2 medium 설정에서는 standard attention과 FlashAttention이 다음처럼 달랐다.
+
+| 항목 | Standard Attention | FlashAttention |
+| --- | ---: | ---: |
+| GFLOPs | 66.6 | 75.2 |
+| HBM read/write | 40.3GB | 4.4GB |
+| Runtime | 41.7ms | 7.3ms |
+
+흥미로운 점은 FlashAttention의 FLOPs가 오히려 더 많다는 것이다. 그런데 HBM read/write가 훨씬 줄어서 실제 runtime은 더 짧다.
+
+이게 논문의 중요한 메시지다.
+
+> GPU에서는 계산을 조금 더 하더라도 memory traffic을 크게 줄이면 더 빨라질 수 있다.
 
 ## FlashAttention의 핵심 아이디어
 
-FlashAttention은 attention score matrix 전체를 한 번에 만들지 않는다.
+FlashAttention은 `N x N` attention matrix 전체를 HBM에 만들지 않는다.
 
-대신 `Q`, `K`, `V`를 block 단위로 나누고, 각 block을 빠른 SRAM에 올려서 계산한다. 그리고 필요한 output만 누적한 뒤 HBM에 저장한다.
+대신 `Q`, `K`, `V`를 block으로 나누고, 작은 block을 SRAM에 올려 계산한다. 각 block 계산이 끝나면 필요한 output과 softmax 통계만 유지하고, 거대한 attention matrix는 저장하지 않는다.
 
-핵심은 다음 두 가지다.
+논문 Algorithm 1의 흐름을 단순화하면 다음과 같다.
 
-1. `N x N` attention matrix를 HBM에 저장하지 않는다.
-2. softmax를 block 단위로 계산하면서도 전체 softmax와 같은 결과를 유지한다.
+```text
+K, V를 block으로 나눈다.
+Q를 block으로 나눈다.
 
-즉, FlashAttention은 approximate attention이 아니다. attention 결과를 근사하는 것이 아니라, 같은 결과를 더 메모리 효율적으로 계산하는 방식이다.
+for each K_j, V_j block:
+  K_j, V_j를 HBM에서 SRAM으로 load
 
-## Tiling
+  for each Q_i block:
+    Q_i와 현재까지의 O_i, m_i, l_i를 SRAM으로 load
+    S_ij = Q_i K_j^T 를 SRAM 안에서 계산
+    block 단위 row max와 exp sum을 계산
+    기존 O_i를 새 softmax normalization 기준으로 보정
+    새 block의 P_ij V_j 결과를 O_i에 누적
+    O_i, m_i, l_i를 HBM에 write
+```
 
-FlashAttention은 tiling을 사용한다.
+여기서 `m_i`와 `l_i`가 중요하다.
 
-Tiling은 큰 matrix 연산을 작은 block 연산으로 나누는 방법이다.
+- `m_i`: 지금까지 본 score의 row-wise maximum
+- `l_i`: softmax denominator의 누적값
+- `O_i`: 지금까지 누적된 output block
 
-예를 들어 전체 `Q`, `K`, `V`를 한 번에 처리하지 않고 다음처럼 나눈다.
+즉 FlashAttention은 attention score 전체를 저장하는 대신, softmax를 이어서 계산하는 데 필요한 작은 통계만 저장한다.
 
-- `Q` block 하나를 SRAM에 올린다.
-- `K`, `V` block을 순서대로 SRAM에 올린다.
-- 해당 block 조합에 대한 attention을 계산한다.
-- output을 누적한다.
-- 다음 block으로 넘어간다.
+![FlashAttention의 memory hierarchy와 IO-aware attention 구조](/assets/images/blog/flashattn.png)
 
-이 방식은 GPU의 빠른 on-chip memory를 더 잘 활용한다.
-
-중요한 점은 `QK^T` 전체 matrix를 만들지 않는다는 것이다. 필요한 block의 score만 계산하고, softmax와 value 곱까지 이어서 처리한 뒤 버린다.
+*FlashAttention은 Q, K, V block을 SRAM에 올려 계산하고, `N x N` attention matrix를 HBM에 materialize하지 않는다.*
 
 ## Online Softmax
 
-FlashAttention이 어려운 이유는 softmax 때문이다.
+FlashAttention에서 가장 까다로운 부분은 softmax다.
 
-softmax는 전체 score를 보고 normalization해야 한다.
+Softmax는 한 row의 모든 score를 보고 normalization해야 한다.
 
 $$
-softmax(x_i)
-= \frac{e^{x_i}}{\sum_j e^{x_j}}
+softmax(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}
 $$
 
-그런데 block 단위로 attention score를 계산하면 전체 score를 한 번에 볼 수 없다. 단순히 block마다 softmax를 따로 계산하면 전체 softmax와 다른 결과가 나온다.
+그런데 FlashAttention은 score row 전체를 한 번에 들고 있지 않는다. block 단위로 `S_ij`만 본다. 단순히 block마다 따로 softmax를 하면 전체 softmax와 다른 결과가 나온다.
 
-FlashAttention은 이를 해결하기 위해 online softmax를 사용한다.
+이를 해결하기 위해 논문은 online softmax를 사용한다. 새 block이 들어올 때마다 row maximum과 denominator를 갱신한다.
 
-각 block을 처리하면서 다음 값을 함께 관리한다.
+기존까지의 통계를 `m`, `l`이라고 하고, 새 block의 통계를 `m_tilde`, `l_tilde`라고 하면 새 maximum은 다음과 같다.
 
-- 지금까지 본 score의 최대값
-- softmax denominator의 누적값
-- output의 누적값
+$$
+m_{new} = max(m, \tilde{m})
+$$
 
-![FlashAttention의 block-wise online softmax 계산 흐름](/assets/images/blog/flash%20attn.webp)
+denominator는 maximum이 바뀐 만큼 기존 값을 보정해서 더한다.
 
-*각 score block은 SRAM에서 계산되고, denominator와 output을 누적 보정하면서 전체 softmax와 같은 결과를 유지한다.*
+$$
+l_{new}
+= e^{m - m_{new}}l
++ e^{\tilde{m} - m_{new}}\tilde{l}
+$$
 
-새 block이 들어오면 기존 누적값을 새 최대값 기준으로 보정한 뒤 이어서 계산한다. 이렇게 하면 전체 score matrix를 저장하지 않아도, 모든 score를 본 것과 같은 softmax 결과를 만들 수 있다.
+output도 같은 방식으로 보정한다.
 
-정리하면 FlashAttention은 block 단위로 계산하지만, softmax는 전체 sequence 기준으로 정확하게 유지한다.
+$$
+O_{new}
+= \frac{
+e^{m - m_{new}}lO
++ e^{\tilde{m} - m_{new}}\tilde{P}V
+}{
+l_{new}
+}
+$$
 
-## 일반 Attention과 FlashAttention 비교
+이렇게 하면 block 단위로 계산해도 전체 row를 한 번에 softmax한 것과 같은 결과를 얻는다.
 
-일반 attention은 중간 attention matrix를 만든다.
+## Backward Pass와 Recomputation
 
-```text
-Q, K, V
-  -> QK^T
-  -> softmax(QK^T)
-  -> softmax(QK^T) V
-  -> output
-```
+학습에서는 forward만 빠르면 부족하다. Backward pass도 memory를 많이 쓴다.
 
-FlashAttention은 중간 matrix를 HBM에 저장하지 않고 block 단위로 바로 output을 누적한다.
+일반 attention은 backward를 위해 `S` 또는 `P` 같은 `N x N` 중간 matrix를 저장한다. 이 값들이 없으면 gradient 계산에 필요하기 때문이다.
 
-```text
-Q block, K block, V block
-  -> block score
-  -> online softmax update
-  -> output accumulate
-  -> final output
-```
+FlashAttention은 이 중간 matrix를 저장하지 않는다. 대신 forward에서 다음 값만 저장한다.
 
-차이를 표로 정리하면 다음과 같다.
+- output `O`
+- row-wise maximum `m`
+- softmax denominator `l`
 
-| 항목 | 일반 Attention | FlashAttention |
-| --- | --- | --- |
-| 중간 attention matrix | HBM에 저장 | 저장하지 않음 |
-| memory access | 큼 | 줄어듦 |
-| 결과 | 정확한 attention | 정확한 attention |
-| 핵심 최적화 | matmul 중심 | IO-aware tiling |
-| 긴 sequence | memory 병목이 큼 | 더 효율적 |
+Backward 때는 `Q`, `K`, `V` block과 `m`, `l`을 사용해 필요한 attention block을 SRAM 안에서 다시 계산한다.
 
-## 왜 긴 Context에서 중요한가
+이 방식은 recomputation이다. 계산량은 늘어난다. 하지만 `N x N` matrix를 HBM에서 읽고 쓰는 비용이 사라지기 때문에, 실제로는 backward도 더 빨라질 수 있다.
 
-Attention score matrix는 sequence length에 대해 quadratic하게 커진다.
+논문은 이를 selective gradient checkpointing처럼 볼 수 있다고 설명한다. 일반 gradient checkpointing은 memory를 줄이는 대신 느려지는 경우가 많지만, FlashAttention에서는 HBM access 감소가 커서 recomputation이 오히려 유리해진다.
 
-sequence length를 2배로 늘리면 attention score matrix 크기는 4배가 된다. 그래서 long context를 다루는 모델에서는 attention memory 비용이 빠르게 문제가 된다.
+## IO Complexity
 
-FlashAttention은 attention score matrix를 materialize하지 않기 때문에 memory 사용량을 크게 줄일 수 있다. 이 덕분에 더 긴 sequence를 학습하거나 추론할 때 유리하다.
+FlashAttention은 dense exact attention이므로 FLOPs 자체는 여전히 다음과 같다.
 
-다만 FlashAttention이 attention의 이론적 계산 복잡도 자체를 `O(N^2)`에서 `O(N)`으로 바꾸는 것은 아니다.
+$$
+O(N^2d)
+$$
 
-여전히 모든 query-key 조합을 계산해야 한다. 대신 중간 결과를 저장하고 읽는 비용을 줄여 실제 wall-clock time과 memory 사용량을 개선한다.
+즉 query-key 조합 수가 사라지는 것은 아니다.
 
-## 학습과 추론에서의 의미
+하지만 HBM access는 줄어든다. 논문은 SRAM 크기를 `M`, head dimension을 `d`, sequence length를 `N`이라고 할 때 다음처럼 분석한다.
 
-FlashAttention은 학습과 추론 모두에서 의미가 있다.
+| 항목 | HBM access |
+| --- | --- |
+| Standard Attention | $\Theta(Nd + N^2)$ |
+| FlashAttention | $\Theta(N^2 d^2 / M)$ |
 
-학습에서는 activation memory를 줄이고 attention 연산 속도를 높일 수 있다. 긴 sequence로 학습할 때 GPU memory 부족을 완화하는 데 도움이 된다.
+일반적으로 `d`는 64 또는 128 정도이고, `M`은 SRAM 크기다. `d^2`보다 `M`이 충분히 크면 FlashAttention은 standard attention보다 훨씬 적은 HBM access를 사용한다.
 
-추론에서는 prompt prefill 단계에서 특히 중요하다. LLM inference는 크게 두 단계로 볼 수 있다.
-
-- Prefill: 입력 prompt 전체를 한 번에 처리해 KV cache를 만든다.
-- Decode: 다음 token을 하나씩 생성한다.
-
-FlashAttention은 여러 token을 한 번에 처리하는 attention 계산에서 효과가 크기 때문에 prefill 단계에서 자주 중요해진다.
-
-반면 decode 단계에서는 한 번에 새 token 하나를 생성하는 경우가 많다. 이때는 FlashAttention보다 KV cache 관리, batching, memory bandwidth 같은 요소가 더 큰 병목이 될 수 있다.
-
-그래서 LLM serving을 볼 때는 FlashAttention만 따로 보기보다 vLLM의 continuous batching, PagedAttention, KV cache 최적화와 함께 봐야 한다.
-
-## FlashAttention-2
-
-FlashAttention-2는 FlashAttention의 아이디어를 유지하면서 GPU 병렬성을 더 잘 활용하도록 개선한 버전이다.
-
-FlashAttention-1이 memory IO를 줄이는 데 집중했다면, FlashAttention-2는 다음 부분을 더 개선했다.
-
-- non-matmul 연산 감소
-- thread block 간 work partitioning 개선
-- warp 간 shared memory read/write 감소
-- 더 높은 GPU occupancy 달성
-
-즉, FlashAttention-2는 같은 IO-aware attention이라도 GPU 내부에서 일을 나누는 방식을 더 효율적으로 만든 것이다.
-
-실제 LLM 학습과 추론 라이브러리에서는 FlashAttention-2 계열 구현을 사용하는 경우가 많다.
-
-## FlashAttention-3
-
-FlashAttention-3는 H100 같은 Hopper GPU 아키텍처를 더 잘 활용하기 위한 버전이다.
-
-핵심 방향은 다음과 같다.
-
-- Tensor Core 연산과 data movement를 더 잘 겹치기
-- TMA 같은 Hopper 기능 활용
-- FP8 같은 low-precision 연산 지원
-- 비동기 실행으로 GPU pipeline 효율 높이기
-
-즉, FlashAttention-3는 FlashAttention의 기본 아이디어를 유지하면서 최신 GPU 하드웨어에 더 맞게 최적화한 버전으로 볼 수 있다.
-
-다만 모든 환경에서 FlashAttention-3를 바로 쓰는 것은 아니다. GPU 아키텍처, CUDA 버전, 프레임워크 지원 여부에 따라 사용할 수 있는 구현이 달라진다.
-
-## PyTorch에서의 사용
-
-요즘은 직접 FlashAttention kernel을 호출하지 않아도, PyTorch나 Hugging Face Transformers 내부에서 optimized attention backend를 사용하는 경우가 많다.
-
-PyTorch에는 `scaled_dot_product_attention` API가 있고, 환경에 따라 math, memory efficient attention, flash attention backend 중 하나를 사용할 수 있다.
-
-개념적으로는 다음과 같은 형태다.
-
-```python
-import torch.nn.functional as F
-
-output = F.scaled_dot_product_attention(
-    query,
-    key,
-    value,
-    attn_mask=attn_mask,
-    dropout_p=0.0,
-    is_causal=True,
-)
-```
-
-다만 실제로 어떤 backend가 선택되는지는 GPU, dtype, tensor shape, PyTorch 버전에 따라 달라질 수 있다. 성능을 확인하려면 단순히 코드가 실행되는지만 보지 말고 profiler나 benchmark로 실제 kernel을 확인해야 한다.
-
-## Trade-off
-
-FlashAttention은 매우 유용하지만, 모든 문제를 해결하는 마법은 아니다.
-
-먼저 GPU kernel 수준의 최적화이기 때문에 하드웨어와 소프트웨어 환경의 영향을 많이 받는다. 특정 GPU, CUDA, PyTorch 조합에서는 기대한 backend가 선택되지 않을 수 있다.
-
-또한 attention 계산 자체가 사라지는 것은 아니다. sequence length가 길어질수록 여전히 계산량은 커진다. FlashAttention은 memory IO를 줄여 더 효율적으로 만들지만, quadratic attention의 근본적인 조합 수는 그대로 남는다.
-
-마지막으로 decode 중심 workload에서는 attention kernel보다 KV cache memory, scheduler, batching이 더 큰 병목일 수 있다. 그래서 serving에서는 FlashAttention과 PagedAttention을 구분해서 이해해야 한다.
-
-## FlashAttention과 PagedAttention 차이
-
-둘 다 LLM serving 글에서 자주 등장하지만 해결하는 문제가 다르다.
-
-FlashAttention은 attention 계산 kernel을 빠르고 memory-efficient하게 만드는 방법이다.
-
-PagedAttention은 vLLM에서 KV cache memory를 block 단위로 관리해 serving 중 memory 낭비를 줄이는 방법이다.
+또한 FlashAttention은 input과 output 외 추가 memory가 `O(N)`이다. 반면 standard attention은 `S`, `P` 때문에 `O(N^2)` memory를 사용한다.
 
 정리하면 다음과 같다.
 
+| 항목 | Standard Attention | FlashAttention |
+| --- | --- | --- |
+| 결과 | Exact attention | Exact attention |
+| FLOPs | $O(N^2d)$ | $O(N^2d)$ |
+| 추가 memory | $O(N^2)$ | $O(N)$ |
+| 병목 | `N x N` matrix HBM read/write | block 계산과 누적 |
+| 핵심 기법 | 중간 matrix materialization | tiling, online softmax, recomputation |
+
+## Kernel Fusion
+
+FlashAttention은 단순한 수식 변형만이 아니다. 구현 관점에서는 CUDA kernel fusion이 중요하다.
+
+일반 구현에서는 다음 연산들이 여러 kernel로 나뉘기 쉽다.
+
+- matrix multiply
+- masking
+- softmax
+- dropout
+- matrix multiply
+
+각 kernel 사이에서 중간 결과가 HBM에 쓰이고 다시 읽힌다.
+
+FlashAttention은 tiling 구조 덕분에 이 과정을 하나의 CUDA kernel 안에서 처리할 수 있다. `Q`, `K`, `V` block을 SRAM에 올리고, score 계산, masking, softmax, dropout, value 곱을 이어서 수행한 뒤 최종 output만 HBM에 쓴다.
+
+그래서 FlashAttention은 "attention 공식을 바꾼 방법"이라기보다 "attention을 GPU memory hierarchy에 맞게 다시 구현한 방법"에 가깝다.
+
+## 실험 결과
+
+논문은 FlashAttention이 단순 microbenchmark뿐 아니라 실제 model training에서도 효과가 있다고 보인다.
+
+대표 결과는 다음과 같다.
+
+- BERT-large training에서 MLPerf 1.1 기록 대비 약 15% 빠름
+- GPT-2 training에서 Hugging Face 구현 대비 최대 3x speedup
+- Long Range Arena에서 standard attention 대비 약 2.4x speedup
+- common sequence length에서 standard attention 대비 최대 3x 빠름
+- attention memory footprint는 sequence length에 선형으로 증가
+- exact attention baseline 대비 최대 20x memory efficient
+
+또한 FlashAttention 덕분에 더 긴 context로 학습할 수 있었다.
+
+GPT-2 small 실험에서는 context length를 1K에서 4K로 늘려도 Megatron-LM의 1K context baseline보다 빠르게 학습했고, perplexity는 0.7 좋아졌다. Long document classification에서도 sequence length를 늘리면서 성능이 좋아졌다.
+
+논문에서 인상적인 결과 중 하나는 Path-X다. 기존 Transformer 계열은 memory 부족이나 random 수준 성능 때문에 어려웠는데, FlashAttention으로 sequence length 16K를 처리해 61.4% accuracy를 보고했다.
+
+## Block-Sparse FlashAttention
+
+논문은 FlashAttention을 block-sparse attention으로도 확장한다.
+
+Dense FlashAttention은 exact attention이다. 모든 query-key 조합을 본다. 반면 block-sparse FlashAttention은 attention matrix의 일부 block만 계산한다.
+
+이 경우 attention 자체는 sparse mask에 의해 근사 또는 제한된 attention이 된다. 하지만 FlashAttention의 IO-aware tiling 구조를 그대로 활용할 수 있다.
+
+논문에 따르면 nonzero block 비율을 `s`라고 하면 block-sparse FlashAttention의 HBM access는 대략 다음처럼 줄어든다.
+
+$$
+\Theta(Nd + N^2 d^2 M^{-1}s)
+$$
+
+즉 sparsity가 높을수록 HBM access와 runtime이 줄어든다. 다만 이 글에서 말하는 FlashAttention-1의 핵심은 dense exact attention이고, block-sparse 버전은 그 확장으로 보는 것이 좋다.
+
+## 한계
+
+FlashAttention은 매우 강력하지만, 모든 문제를 해결하지는 않는다.
+
+첫째, dense attention의 계산 복잡도 자체를 없애지는 않는다. `N x N` score를 저장하지 않을 뿐, dense exact attention이라면 query-key 조합은 여전히 계산한다.
+
+둘째, CUDA kernel 수준의 구현이 필요하다. 논문도 새로운 attention 변형마다 CUDA kernel을 직접 작성해야 하는 점을 한계로 언급한다. 또한 GPU architecture가 바뀌면 구현 최적화가 그대로 이전되지 않을 수 있다.
+
+셋째, LLM serving의 decode 단계에서는 병목이 다를 수 있다. FlashAttention은 여러 token을 한 번에 처리하는 training이나 prompt prefill에서 특히 중요하다. 반면 decode는 token을 하나씩 생성하는 경우가 많고, 이때는 KV cache memory, scheduler, batching이 더 큰 병목이 될 수 있다.
+
+## FlashAttention과 PagedAttention 차이
+
+FlashAttention과 PagedAttention은 이름이 비슷해서 헷갈리지만, 해결하는 문제가 다르다.
+
 | 항목 | FlashAttention | PagedAttention |
 | --- | --- | --- |
-| 주 대상 | attention 계산 | KV cache 관리 |
-| 핵심 문제 | HBM read/write 비용 | 동시 요청의 cache memory 낭비 |
-| 주 효과 | attention 속도와 memory 개선 | serving throughput과 memory utilization 개선 |
-| 관련 단계 | prefill, training에서 특히 중요 | decode와 multi-request serving에서 중요 |
+| 대상 | attention 계산 kernel | KV cache memory 관리 |
+| 핵심 문제 | HBM read/write 비용 | serving 중 cache fragmentation과 낭비 |
+| 주요 상황 | training, prefill, 긴 sequence attention | decode, multi-request serving |
+| 대표 시스템 | FlashAttention CUDA kernel | vLLM |
 
-둘은 경쟁 관계라기보다 서로 다른 병목을 해결하는 기술이다.
+FlashAttention은 `QK^T -> softmax -> PV` 계산을 더 memory-efficient하게 만든다. PagedAttention은 생성 중 쌓이는 KV cache를 block 단위로 관리한다.
+
+둘은 경쟁 기술이 아니라 서로 다른 병목을 줄이는 기술이다.
 
 ## 정리
 
-FlashAttention은 Transformer attention을 IO-aware하게 다시 구현한 방법이다.
+FlashAttention-1의 핵심은 attention을 **IO-aware algorithm**으로 다시 보는 것이다.
 
-핵심은 다음과 같다.
+기존 attention은 `N x N` attention matrix를 HBM에 materialize한다. 이 때문에 sequence length가 길어질수록 memory footprint와 HBM traffic이 커진다.
 
-- 기존 attention은 `N x N` attention matrix를 만들기 때문에 memory IO 비용이 크다.
-- FlashAttention은 tiling으로 `Q`, `K`, `V`를 block 단위로 처리한다.
-- attention matrix 전체를 HBM에 저장하지 않고 output을 누적한다.
-- online softmax를 사용해 block 단위 계산에서도 정확한 softmax 결과를 유지한다.
-- attention의 `O(N^2)` 계산 자체를 없애는 것은 아니지만, 실제 GPU memory 사용량과 실행 시간을 크게 줄인다.
+FlashAttention은 tiling으로 `Q`, `K`, `V`를 block 단위로 SRAM에 올리고, online softmax로 정확한 softmax 결과를 유지하며, backward에서는 필요한 attention block을 recompute한다. 그 결과 dense exact attention을 유지하면서 추가 memory를 `O(N^2)`에서 `O(N)`으로 줄이고, HBM access를 크게 낮춘다.
 
-LLM을 다룰 때 FlashAttention은 long context, prefill, 학습 throughput을 이해하는 데 중요한 개념이다.
+가장 중요한 문장은 이것이다.
 
-다만 serving 전체 성능은 FlashAttention 하나만으로 결정되지 않는다. 실제 운영에서는 KV cache, batching, scheduler, quantization, tensor parallelism까지 함께 봐야 한다.
+> FlashAttention은 attention을 덜 계산하는 방법이 아니라, attention을 덜 옮기는 방법이다.
+
+그래서 FLOPs만 보면 FlashAttention의 장점이 잘 보이지 않는다. 하지만 GPU에서는 memory movement가 runtime을 결정하는 경우가 많고, FlashAttention은 바로 그 지점을 찌른다.
 
 ## 참고 자료
 
 - Tri Dao et al., [FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness](https://arxiv.org/abs/2205.14135)
-- Tri Dao, [FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning](https://arxiv.org/abs/2307.08691)
-- Jay Shah et al., [FlashAttention-3: Fast and Accurate Attention with Asynchrony and Low-precision](https://arxiv.org/abs/2407.08608)
+- [FlashAttention PDF](https://arxiv.org/pdf/2205.14135)
