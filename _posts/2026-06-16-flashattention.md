@@ -1,6 +1,7 @@
 ---
 title: "FlashAttention-1 논문 정리: IO-Aware Exact Attention"
 date: 2026-06-16 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - engineering
 tags:

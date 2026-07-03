@@ -1,6 +1,7 @@
 ---
 title: "머신러닝 알고리즘 정리: 회귀, 트리, 앙상블"
 date: 2026-05-29 13:10:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - study
 tags:

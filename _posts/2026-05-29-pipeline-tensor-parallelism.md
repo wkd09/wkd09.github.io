@@ -1,6 +1,7 @@
 ---
 title: "Pipeline Parallelism과 Tensor Parallelism 정리"
 date: 2026-05-29 00:20:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - engineering
 tags:

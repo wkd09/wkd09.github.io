@@ -1,8 +1,8 @@
 ---
 title: "Speculative Decoding 논문 정리: 작은 모델로 큰 모델의 디코딩을 빠르게 만들기"
 date: 2026-06-17 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - study
   - research
 tags:
   - AI

@@ -1,6 +1,7 @@
 ---
 title: "Mixed Precision 정리: 메모리와 정밀도의 trade-off 다루기"
 date: 2026-05-29 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -11,80 +12,93 @@ tags:
 source: "Velog PDF - Mixed Precision"
 ---
 
-오늘은 GPU resource를 효율적으로 사용하는 기법중 하나인 Mixed Precision에 대해 알아 볼 것이다.
-이번에도 단순한 개념이 아닌,
-어떤 병목으로 인해 나온 방법론인지,
-trade-off는 어떻게 되는지는 알아 보겠다.
-Mixed Precision을 알아 보기 전에 부동 소수점부터 복습해보겠다.
-## Floationg Point Fomat
+Mixed Precision은 GPU resource를 효율적으로 사용하기 위한 대표적인 학습 기법이다.
+
+단순히 개념만 보는 것이 아니라, 어떤 병목 때문에 이 방법이 나왔고 메모리와 정밀도 사이에서 어떤 trade-off가 생기는지 살펴보자. Mixed Precision을 이해하기 전에 먼저 부동소수점 표현부터 복습한다.
+
+## Floating Point Format
+
 ![Mixed Precision image 1](https://velog.velcdn.com/images/junmin0413/post/6ae453b5-0c3b-4b8b-ad88-7c19aaa2457b/image.png)
-• BF16: 총 16bits이며, 지수범위가 8bits, 가수범위가 7bits
-• FP16: 총 16bits이며, 지수범위가 5bits, 가수범위가 10bits
-• FP32: 총 32bits이며, 지수범위가 8bits, 가수범위가 23bits
-지수: 숫자의 크기, 표현 가능한 최대/최소 값
-가수: 숫자의 정밀도, 값의 정확도
-즉, 표현 범위에 있어선 FP16 < BF16 < FP32이지만,
-정밀도에 있어선 BF16 < FP16 < FP32이다.
-그래서 모델 학습 시 항상 bf16이 fp16보다 좋다고 얘기할수만은 없다.
-최근 학습에선 fp16를, 추론에서 양자화 8bit, 4bit를 많이 사용하는 것 같다.
-fp16방식을 이용해 학습을 하면 저장공간도 아끼고, 학습 시간도 줄어든다.
-하지만 정밀도가 매우 떨어진다. 따라 gradient가 너무 큰 경우, 너무 작은 경우 오차가 발생하게 되고 이 오차들이
-누적되어 결국 학습이 잘 진행되지 않는다.
+
+- BF16: 총 16bits이며, 지수 범위가 8bits, 가수 범위가 7bits
+- FP16: 총 16bits이며, 지수 범위가 5bits, 가수 범위가 10bits
+- FP32: 총 32bits이며, 지수 범위가 8bits, 가수 범위가 23bits
+
+지수는 숫자의 크기와 표현 가능한 최대/최소값에 영향을 주고, 가수는 숫자의 정밀도에 영향을 준다.
+
+즉 표현 범위는 대체로 `FP16 < BF16 < FP32`이고, 정밀도는 `BF16 < FP16 < FP32`이다. 그래서 모델 학습 시 항상 BF16이 FP16보다 좋다고 말할 수는 없다.
+
+FP16 방식으로 학습하면 저장 공간을 아끼고 학습 시간도 줄일 수 있다. 하지만 정밀도가 낮아 gradient가 너무 크거나 작은 경우 오차가 발생할 수 있고, 이 오차가 누적되면 학습이 불안정해질 수 있다.
+
 ![Mixed Precision image 2](https://velog.velcdn.com/images/junmin0413/post/03e8c4f7-d871-4e1a-9e04-868f86e6a3e6/image.png)
-그리고 fp32로 학습하면 배치 사이즈도 크게 늘릴 수 없고, 메모리 용량을 많이 차지해 메모리 통신 시간이 많이 걸린다는
-단점이 존재한다.
-이러한 문제들을 해결하기 위해 Mixed Precision이 나왔다.
+
+반대로 FP32로만 학습하면 배치 사이즈를 크게 늘리기 어렵고, 메모리를 많이 차지해 메모리 통신 시간도 커진다. 이러한 문제를 줄이기 위해 Mixed Precision이 사용된다.
+
 ## Mixed Precision
-메모리와 정밀도의 trade-off 문제를 해결하기 나온 Mixed Precision.
+
+Mixed Precision은 메모리 사용량과 정밀도 사이의 trade-off를 다루기 위한 방법이다. 핵심은 모든 값을 낮은 precision으로 처리하는 것이 아니라, 필요한 부분은 FP32로 유지하고 계산량이 큰 부분은 FP16/BF16을 활용하는 것이다.
+
 ## 방법론
+
 ![Mixed Precision image 3](https://velog.velcdn.com/images/junmin0413/post/53ad5f17-5197-4a76-ba64-8fd736945a04/image.png)
-1. FP32 wheight에 대한 FP16 copy weight을 만든다. (FP16은 forward, backward에서 사용)
-2. FP16 copy weight로 계산된 forward pass 진행
-3. forward pass로 계산된 FP16 prediction 값을 FP32로 casting(타입변환)한다.
+
+1. FP32 weight에 대한 FP16 copy weight를 만든다. FP16은 forward/backward에서 사용한다.
+2. FP16 copy weight로 forward pass를 진행한다.
+3. forward pass로 계산된 FP16 prediction 값을 FP32로 casting한다.
 4. FP32 prediction을 이용해 FP32 loss를 계산하고 여기에 scaling factor S를 곱한다.
-5. scaled FP32 loss를 FP16를 casting(타입변환)한다.
-6. scaled FP16 loss를 이용해 backward propagation을 진행하고, gradient 계산.
-7. FP16 gradient를 FP32로 casting하고, 이를 scaling factor S로 다시 나눈다. (chain rule로 인해 모든 gradient는
-같은 크기로 scaling된 상태)
+5. scaled FP32 loss를 FP16으로 casting한다.
+6. scaled FP16 loss로 backward propagation을 진행하고 gradient를 계산한다.
+7. FP16 gradient를 FP32로 casting하고, 이를 scaling factor S로 다시 나눈다. chain rule로 인해 모든 gradient는 같은 크기로 scaling된 상태다.
 8. FP32 gradient를 이용해 FP32 weight를 update한다.
-정리하면 FP 32 weight는 저장하고
-FP 16 copy weight를 만들어 이를 이용해 forward/backward pass를 진행하고,
-FP 16 copy weight으로 얻은 gradient를 이용해 FP32 weight를 update한다.
-즉, 연산할땐 FP16으로 메모리 줄이고 update할땐 FP32로 정밀도를 높인다.
+
+정리하면 FP32 weight는 저장해두고, FP16 copy weight로 forward/backward pass를 진행한 뒤, FP16에서 얻은 gradient를 이용해 FP32 weight를 update한다. 즉 연산할 때는 FP16으로 메모리를 줄이고, update할 때는 FP32로 정밀도를 높인다.
+
 ![Mixed Precision image 4](https://velog.velcdn.com/images/junmin0413/post/41acfc22-acba-4b21-8c0a-6cbf3f75c6ab/image.png)
-계속 나온 scaling factor S는 뭐고 어떻게 정할까?
-loss를 키워(scaling), under flow를 막기 위해 곱하는 것으로
-그럼 어떻게 정하지?
--> 논문에선 단순히 경험적 값을 선택하거나,
-gradient의 통계화가 가능한 경우 gradient의 maximum absolute value가 65,504가 되도록 맞춰 주면 된다고
-한다. 하지만 scaling factor이 크다고 나쁜건 아니지만, overflow가 일어나지 않도록 주의!!
+
+계속 등장한 scaling factor S는 무엇이고 어떻게 정할까?
+
+loss scaling은 loss를 키워서 underflow를 막기 위해 사용하는 방법이다. 논문에서는 경험적인 값을 선택하거나, gradient 통계를 사용할 수 있는 경우 gradient의 maximum absolute value가 65,504 근처가 되도록 맞추는 방법을 설명한다. 다만 scaling factor가 너무 크면 overflow가 발생할 수 있으므로 주의해야 한다.
+
 ## 실험
-그럼 Nvidia의 실험한 속도, 성능 표를 보자
+
+NVIDIA의 실험 결과를 보자.
+
 ![Mixed Precision image 5](https://velog.velcdn.com/images/junmin0413/post/f22a078b-80ed-4aff-b3a5-6255bf1b1129/image.png)
-본 실험은 Translation, Speech recognition, Language modeling 등에 대해서 실험을 진행했는데, 속도가 매우
-빨라지는 것을 확인 가능.
-속도가 2~4.9배가 빨라지는 것을 볼 수 있다.
+
+Translation, speech recognition, language modeling 등에서 실험을 진행했고, 속도가 2~4.9배 빨라지는 것을 볼 수 있다.
+
 ![Mixed Precision image 6](https://velog.velcdn.com/images/junmin0413/post/24dfb2e7-791d-4f82-a7fc-4c976d807257/image.png)
-성능을 보아도, FP32이랑 거의 차이없거나 더 높은 성능 볼 수 있다.(성능 상승 이유:batch size 증강로 인해 noisy한
-gradient가 없어지는 효과일수도?)
+
+성능도 FP32와 거의 차이가 없거나 더 높은 경우를 볼 수 있다. 성능 상승은 batch size 증가로 noisy한 gradient가 줄어드는 효과와 관련이 있을 수 있다.
+
 ## 실습
-Pytorch를 통해 실습해보자
+
+PyTorch를 통해 실습해보자.
+
 ```python
 use_amp = True
 net = make_model(in_size, out_size, num_layers)
 opt = torch.optim.SGD(net.parameters(), lr=0.001)
-scaler = torch.amp.GradScaler("cuda" ,enabled=use_amp)
+scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+
 start_timer()
+
 for epoch in range(epochs):
-for input, target in zip(data, targets):
-with torch.autocast(device_type=device, dtype=torch.float16, enabled=use_amp):
-output = net(input)
-loss = loss_fn(output, target)
-scaler.scale(loss).backward()
-scaler.step(opt)
-scaler.update()
-opt.zero_grad()
+    for input, target in zip(data, targets):
+        with torch.autocast(device_type=device, dtype=torch.float16, enabled=use_amp):
+            output = net(input)
+            loss = loss_fn(output, target)
+
+        scaler.scale(loss).backward()
+        scaler.step(opt)
+        scaler.update()
+        opt.zero_grad()
+
 end_timer_and_print("Mixed precision:")
 ```
+
 ## 참고 자료
-- <https://docs.pytorch.org/tutorials/recipes/recipes/amp_recipe.htmlhttps://bo-10000.tistory.com/32https://yjoonjang.medium.com/mixed-precision-training%EC%97%90-%EB%8C%80%ED%95%B4-%EC%95%8C%EC%95%84%EB%B3%B4%EC%9E%90-mp-amp-torch-cuda-amp-15c99488ed34>
+
+- <https://docs.pytorch.org/tutorials/recipes/recipes/amp_recipe.html>
+- <https://bo-10000.tistory.com/32>
+- <https://yjoonjang.medium.com/mixed-precision-training%EC%97%90-%EB%8C%80%ED%95%B4-%EC%95%8C%EC%95%84%EB%B3%B4%EC%9E%90-mp-amp-torch-cuda-amp-15c99488ed34>

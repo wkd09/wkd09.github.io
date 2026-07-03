@@ -1,8 +1,8 @@
 ---
 title: "GraphRAG 논문 정리: 전체 문서 집합을 이해하는 RAG"
 date: 2026-07-02 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - engineering
   - research
 tags:
   - AI

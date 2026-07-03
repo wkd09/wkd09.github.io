@@ -1,6 +1,7 @@
 ---
 title: "LLM 서빙 기초: KV Cache와 llama.cpp"
 date: 2026-05-29 01:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - engineering
 tags:

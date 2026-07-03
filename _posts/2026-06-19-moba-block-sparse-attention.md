@@ -1,8 +1,8 @@
 ---
 title: "MoBA: Long-Context LLM을 위한 Block Sparse Attention 이해하기"
 date: 2026-06-19 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - engineering
   - research
 tags:
   - AI

@@ -1,8 +1,8 @@
 ---
 title: "Automatic Prompt Engineer 논문 정리: 프롬프트 엔지니어링을 최적화 문제로 바꾸기"
 date: 2026-06-27 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - engineering
   - research
 tags:
   - AI

@@ -1,6 +1,7 @@
 ---
 title: "Long Context에서 KV Cache가 병목이 되는 이유"
 date: 2026-06-21 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - engineering
 tags:

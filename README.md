@@ -9,7 +9,6 @@ GitHub Pages 기반 개인 기술 블로그입니다.
 - 논문리뷰
 - 구현 / 프로그래밍
 - 공부
-- Troubleshooting
 
 ## Local Development
 
@@ -53,7 +52,6 @@ tags:
 - `study`: 개념 공부, 이론 정리, 논문 읽기 전 배경지식
 - `engineering`: 구현, 시스템 설계, 성능 최적화, 서빙, 배포
 - `research`: 논문 리뷰, 실험 결과, 비교 분석
-- `troubleshooting`: 에러 해결, 삽질 기록, 재현과 해결 과정
 
 이미지는 `assets/images/blog`에 소문자 kebab-case 파일명으로 넣고 본문에서는 절대 경로를 사용합니다.
 
@@ -65,7 +63,6 @@ tags:
 
 - `_templates/post-template.md`
 - `_templates/research-template.md`
-- `_templates/troubleshooting-template.md`
 
 ## Deployment
 

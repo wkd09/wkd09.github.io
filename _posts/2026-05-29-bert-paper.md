@@ -1,6 +1,7 @@
 ---
 title: "BERT 논문 정리: 양방향 Transformer Encoder로 언어 이해하기"
 date: 2026-05-29 01:20:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - research
 tags:

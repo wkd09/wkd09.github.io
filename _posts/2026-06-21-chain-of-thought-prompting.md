@@ -1,8 +1,8 @@
 ---
 title: "Chain-of-Thought Prompting: LLM이 생각하는 과정을 쓰게 하면 왜 성능이 오를까?"
 date: 2026-06-21 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - engineering
   - research
 tags:
   - AI

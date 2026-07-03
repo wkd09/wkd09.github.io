@@ -1,8 +1,8 @@
 ---
 title: "ReAct 논문 정리: LLM Agent는 왜 생각하면서 행동해야 할까?"
 date: 2026-07-01 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
-  - engineering
   - research
 tags:
   - AI
@@ -582,4 +582,3 @@ Thought -> Action -> Observation -> Updated Thought
 CoT는 생각만 해서 hallucination이 생길 수 있고, Act-only는 행동만 해서 계획을 잘 세우지 못한다. ReAct는 둘을 결합해 더 grounded하고, 해석 가능하고, 수정 가능한 agent 행동을 만든다.
 
 현대 tool-calling agent, LangGraph workflow, OpenAI Agents SDK, MCP 기반 agent를 볼 때도 이 구조를 떠올리면 이해가 훨씬 쉬워진다.
-

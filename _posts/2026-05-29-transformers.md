@@ -1,6 +1,7 @@
 ---
 title: "Transformer 정리: Attention만으로 시퀀스를 다루는 방법"
 date: 2026-05-29 00:00:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - study
 tags:

@@ -1,6 +1,7 @@
 ---
 title: "LoRA 논문 정리: Low-Rank Adaptation으로 효율적인 파인튜닝하기"
 date: 2026-05-29 01:10:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - research
 tags:

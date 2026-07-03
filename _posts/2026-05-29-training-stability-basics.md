@@ -1,6 +1,7 @@
 ---
 title: "딥러닝 학습 안정화 기초: Activation, Bias-Variance, Overfitting"
 date: 2026-05-29 00:50:00 +0900
+last_modified_at: 2026-07-04 00:00:00 +0900
 categories:
   - study
 tags:
