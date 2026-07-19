@@ -1,0 +1,21 @@
+---
+layout: single
+---
+{% assign summary = page.summary | default: page.excerpt | strip_html | normalize_whitespace %}
+{% if summary != "" %}
+  <aside class="key-summary" aria-labelledby="key-summary-title">
+    <p id="key-summary-title" class="key-summary__label">핵심 요약</p>
+    <p>{{ summary }}</p>
+  </aside>
+{% endif %}
+
+{% if page.summary %}
+  {{ content }}
+{% elsif page.excerpt %}
+  {% assign content_parts = content | split: '</p>' %}
+  {% for part in content_parts offset: 1 %}
+    {{ part }}{% unless forloop.last %}</p>{% endunless %}
+  {% endfor %}
+{% else %}
+  {{ content }}
+{% endif %}

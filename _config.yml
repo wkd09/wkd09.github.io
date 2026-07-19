@@ -30,16 +30,7 @@ author:
       url: "https://github.com/wkd09"
     - label: "Email"
       icon: "fas fa-fw fa-envelope"
-      url: "mailto:your-email@example.com"
-    - label: "LinkedIn"
-      icon: "fab fa-fw fa-linkedin"
-      url: "#"
-    - label: "Velog"
-      icon: "fas fa-fw fa-pen"
-      url: "#"
-    - label: "Notion"
-      icon: "fas fa-fw fa-book"
-      url: "#"
+      url: "mailto:wkdwnsals0413@gmail.com"
 
 footer:
   links:
@@ -48,14 +39,14 @@ footer:
       url: "https://github.com/wkd09"
     - label: "Email"
       icon: "fas fa-fw fa-envelope"
-      url: "mailto:your-email@example.com"
+      url: "mailto:wkdwnsals0413@gmail.com"
 
 defaults:
   - scope:
       path: ""
       type: posts
     values:
-      layout: single
+      layout: post
       author_profile: true
       show_date: true
       read_time: true

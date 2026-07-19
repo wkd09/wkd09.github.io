@@ -1,6 +1,7 @@
 ---
 title: "글 제목"
 date: YYYY-MM-DD 00:00:00 +0900
+summary: "이 글에서 가장 먼저 알아야 할 핵심을 1~2문장으로 적습니다."
 categories:
   - study
 tags:

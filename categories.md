@@ -18,9 +18,9 @@ author_profile: true
 </section>
 
 <nav class="category-overview" aria-label="카테고리 바로가기">
-  <a class="category-pill" href="#study">공부 <span>{{ study_count }}</span></a>
-  <a class="category-pill" href="#engineering">구현 <span>{{ engineering_count }}</span></a>
-  <a class="category-pill" href="#research">논문 <span>{{ research_count }}</span></a>
+  <a class="category-pill category-pill--study" href="#study">공부 <span>{{ study_count }}</span></a>
+  <a class="category-pill category-pill--engineering" href="#engineering">구현 <span>{{ engineering_count }}</span></a>
+  <a class="category-pill category-pill--research" href="#research">논문 <span>{{ research_count }}</span></a>
 </nav>
 
 <section id="study" class="category-section">

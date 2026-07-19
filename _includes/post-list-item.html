@@ -18,10 +18,10 @@
             {% else %}
               {% assign category_label = category %}
           {% endcase %}
-          <a class="post-list__pill post-list__pill--category" href="{{ site.category_archive.path | default: '/categories/' | relative_url }}#{{ category | slugify }}">{{ category_label }}</a>
+          <a class="post-list__pill post-list__pill--category post-list__pill--{{ category | slugify }}" href="{{ site.category_archive.path | default: '/categories/' | relative_url }}#{{ category | slugify }}">{{ category_label }}</a>
         {% endfor %}
 
-        {% for tag in post.tags limit: 4 %}
+        {% for tag in post.tags limit: 2 %}
           <a class="post-list__pill" href="{{ site.tag_archive.path | default: '/tags/' | relative_url }}#{{ tag | slugify }}">{{ tag }}</a>
         {% endfor %}
       </div>

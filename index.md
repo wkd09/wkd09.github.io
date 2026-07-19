@@ -9,6 +9,40 @@ title: "전체글"
   <span>{{ site.posts.size }}개의 글</span>
 </section>
 
+{% assign study_entry = site.categories.study | first %}
+{% assign research_entry = site.categories.research | first %}
+{% assign engineering_entry = site.categories.engineering | first %}
+
+<section class="reading-paths" aria-labelledby="reading-paths-title">
+  <div class="reading-paths__heading">
+    <p>READING PATHS</p>
+    <h2 id="reading-paths-title">어디서부터 읽을까요?</h2>
+  </div>
+
+  <div class="reading-paths__grid">
+    <a class="reading-path reading-path--study" href="{{ '/study/' | relative_url }}">
+      <span class="reading-path__eyebrow">공부</span>
+      <strong>처음 읽기</strong>
+      <span>AI와 딥러닝의 기본 개념부터 차근차근 살펴봅니다.</span>
+      {% if study_entry %}<small>최근: {{ study_entry.title }}</small>{% endif %}
+    </a>
+
+    <a class="reading-path reading-path--research" href="{{ '/research/' | relative_url }}">
+      <span class="reading-path__eyebrow">논문</span>
+      <strong>최근 논문</strong>
+      <span>모델 구조와 최신 연구를 맥락까지 함께 정리합니다.</span>
+      {% if research_entry %}<small>최근: {{ research_entry.title }}</small>{% endif %}
+    </a>
+
+    <a class="reading-path reading-path--engineering" href="{{ '/engineering/' | relative_url }}">
+      <span class="reading-path__eyebrow">구현</span>
+      <strong>구현 노트</strong>
+      <span>학습, 서빙, 최적화에서 마주친 실제 병목을 기록합니다.</span>
+      {% if engineering_entry %}<small>최근: {{ engineering_entry.title }}</small>{% endif %}
+    </a>
+  </div>
+</section>
+
 {% if site.posts.size > 0 %}
 <div class="post-list">
   {% for post in site.posts %}

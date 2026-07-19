@@ -44,6 +44,7 @@ categories:
 tags:
   - LangGraph
   - AgentOps
+summary: "글의 핵심을 1~2문장으로 요약합니다."
 ---
 ```
 
@@ -52,6 +53,8 @@ tags:
 - `study`: 개념 공부, 이론 정리, 논문 읽기 전 배경지식
 - `engineering`: 구현, 시스템 설계, 성능 최적화, 서빙, 배포
 - `research`: 논문 리뷰, 실험 결과, 비교 분석
+
+`summary`는 글 제목 아래의 **핵심 요약** 상자에 표시됩니다. 생략하면 글의 첫 문단을 대신 사용합니다.
 
 이미지는 `assets/images/blog`에 소문자 kebab-case 파일명으로 넣고 본문에서는 절대 경로를 사용합니다.
 
