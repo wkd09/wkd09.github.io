@@ -1,11 +1,10 @@
 ---
 layout: single
 author_profile: true
-title: "전체글"
+title: "AI, LLM, Agent를 기록합니다."
 ---
 
 <section class="blog-intro">
-  <p>AI, LLM, Agent, 시스템 구현을 공부하며 정리하는 공간입니다.</p>
   <span>{{ site.posts.size }}개의 글</span>
 </section>
 
@@ -15,14 +14,14 @@ title: "전체글"
 
 <section class="reading-paths" aria-labelledby="reading-paths-title">
   <div class="reading-paths__heading">
-    <p>READING PATHS</p>
-    <h2 id="reading-paths-title">어디서부터 읽을까요?</h2>
+    <p>탐색하기</p>
+    <h2 id="reading-paths-title">관심 있는 흐름부터 시작하세요.</h2>
   </div>
 
   <div class="reading-paths__grid">
     <a class="reading-path reading-path--study" href="{{ '/study/' | relative_url }}">
       <span class="reading-path__eyebrow">공부</span>
-      <strong>처음 읽기</strong>
+      <strong>읽기 시작</strong>
       <span>AI와 딥러닝의 기본 개념부터 차근차근 살펴봅니다.</span>
       {% if study_entry %}<small>최근: {{ study_entry.title }}</small>{% endif %}
     </a>
@@ -43,6 +42,12 @@ title: "전체글"
   </div>
 </section>
 
+<section class="latest-notes" aria-labelledby="latest-notes-title">
+  <div class="latest-notes__heading">
+    <p>최근 글</p>
+    <h2 id="latest-notes-title">Latest Notes</h2>
+  </div>
+
 {% if site.posts.size > 0 %}
 <div class="post-list">
   {% for post in site.posts %}
@@ -55,3 +60,4 @@ title: "전체글"
   <span>글을 추가하면 이곳에 최신순으로 표시됩니다.</span>
 </div>
 {% endif %}
+</section>

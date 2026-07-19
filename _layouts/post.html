@@ -1,21 +1,115 @@
 ---
-layout: single
+layout: default
 ---
-{% assign summary = page.summary | default: page.excerpt | strip_html | normalize_whitespace %}
-{% if summary != "" %}
-  <aside class="key-summary" aria-labelledby="key-summary-title">
-    <p id="key-summary-title" class="key-summary__label">핵심 요약</p>
-    <p>{{ summary }}</p>
-  </aside>
+{%- assign locale = page.locale | default: layout.locale | default: site.locale %}
+{% assign words_per_minute = page.words_per_minute | default: site.words_per_minute | default: 200 %}
+{% assign words = content | strip_html | number_of_words %}
+
+{% if page.header.overlay_color or page.header.overlay_image or page.header.image %}
+  {% include page__hero.html locale=locale %}
+{% elsif page.header.video.id and page.header.video.provider %}
+  {% include page__hero_video.html %}
 {% endif %}
 
-{% if page.summary %}
-  {{ content }}
-{% elsif page.excerpt %}
-  {% assign content_parts = content | split: '</p>' %}
-  {% for part in content_parts offset: 1 %}
-    {{ part }}{% unless forloop.last %}</p>{% endunless %}
-  {% endfor %}
-{% else %}
-  {{ content }}
-{% endif %}
+<div id="main" role="main">
+  {% include sidebar.html locale=locale %}
+
+  <article class="page page--post h-entry" itemscope itemtype="https://schema.org/CreativeWork"{% if page.locale %} lang="{{ page.locale }}"{% endif %}>
+    {% if page.title %}<meta itemprop="headline" content="{{ page.title | replace: '|', '&#124;' | markdownify | strip_html | strip_newlines | escape_once }}">{% endif %}
+    {% if page.excerpt %}<meta itemprop="description" content="{{ page.excerpt | markdownify | strip_html | strip_newlines | escape_once }}">{% endif %}
+    {% if page.date %}<meta itemprop="datePublished" content="{{ page.date | date_to_xmlschema }}">{% endif %}
+    {% if page.last_modified_at %}<meta itemprop="dateModified" content="{{ page.last_modified_at | date_to_xmlschema }}">{% endif %}
+
+    <div class="page__inner-wrap">
+      <header class="post-header">
+        {% if page.categories.size > 0 %}
+          {% assign category = page.categories | first %}
+          {% case category %}
+            {% when "study" %}{% assign category_label = "공부" %}
+            {% when "engineering" %}{% assign category_label = "구현" %}
+            {% when "research" %}{% assign category_label = "논문" %}
+            {% else %}{% assign category_label = category %}
+          {% endcase %}
+          <a class="post-header__category" href="{{ site.category_archive.path | default: '/categories/' | relative_url }}#{{ category | slugify }}">{{ category_label }}</a>
+        {% endif %}
+
+        {% if page.title %}
+          <h1 id="page-title" class="page__title p-name" itemprop="headline">
+            <a href="{{ page.url | absolute_url }}" itemprop="url">{{ page.title | markdownify | remove: "<p>" | remove: "</p>" }}</a>
+          </h1>
+        {% endif %}
+
+        <div class="post-header__meta">
+          <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: site.date_format }}</time>
+          <span aria-hidden="true">·</span>
+          <span>{% if words < words_per_minute %}1분 미만{% else %}약 {{ words | divided_by: words_per_minute }}분{% endif %}</span>
+        </div>
+      </header>
+
+      <section class="page__content e-content" itemprop="text">
+        {% if page.toc %}
+          <aside class="sidebar__right {% if page.toc_sticky %}sticky{% endif %}">
+            <nav class="toc" aria-label="Table of contents">
+              <header><h4 class="nav__title"><i class="fas fa-{{ page.toc_icon | default: 'file-alt' }}"></i> {{ page.toc_label | default: site.data.ui-text[locale].toc_label | default: "On this page" }}</h4></header>
+              {% include toc.html sanitize=true html=content h_min=2 h_max=6 class="toc__menu" skip_no_ids=true %}
+            </nav>
+          </aside>
+        {% endif %}
+
+        {% assign article_content = content %}
+        {% assign content_start = content | strip | slice: 0, 3 %}
+        {% if content_start == "<h1" %}
+          {% assign title_parts = content | split: '</h1>' %}
+          {% capture article_content %}{% for part in title_parts offset: 1 %}{{ part }}{% unless forloop.last %}</h1>{% endunless %}{% endfor %}{% endcapture %}
+        {% endif %}
+
+        {% if page.summary %}
+          {% assign summary = page.summary | strip_html | normalize_whitespace %}
+        {% else %}
+          {% assign first_paragraph = article_content | split: '</p>' | first %}
+          {% assign summary = first_paragraph | strip_html | normalize_whitespace %}
+        {% endif %}
+        {% if summary != "" %}
+          <aside class="key-summary" aria-labelledby="key-summary-title">
+            <p id="key-summary-title" class="key-summary__label">핵심 요약</p>
+            <p>{{ summary }}</p>
+          </aside>
+        {% endif %}
+
+        {% if page.summary %}
+          {{ article_content }}
+        {% elsif page.excerpt %}
+          {% assign content_parts = article_content | split: '</p>' %}
+          {% for part in content_parts offset: 1 %}
+            {{ part }}{% unless forloop.last %}</p>{% endunless %}
+          {% endfor %}
+        {% else %}
+          {{ article_content }}
+        {% endif %}
+
+        {% if page.link %}<div><a href="{{ page.link }}" class="btn btn--primary">{{ site.data.ui-text[locale].ext_link_label | default: "Direct Link" }}</a></div>{% endif %}
+      </section>
+
+      <footer class="page__meta">
+        {% include page__taxonomy.html locale=locale %}
+      </footer>
+
+      {% if page.share %}{% include social-share.html locale=locale %}{% endif %}
+      {% include post_pagination.html locale=locale %}
+    </div>
+
+    {% if site.comments.provider and page.comments %}
+      {% if jekyll.environment == 'production' %}
+        {% include comments.html locale=locale %}
+      {% else %}
+        <p>Comments are configured with provider: <strong>{{ site.comments.provider }}</strong>, but are disabled in non-production environments.</p>
+      {% endif %}
+    {% endif %}
+  </article>
+
+  {% if page.id and page.related and site.related_posts.size > 0 %}
+    {% include page__related.html locale=locale posts=site.related_posts %}
+  {% elsif page.id and page.related %}
+    {% include page__related.html locale=locale posts=site.posts %}
+  {% endif %}
+</div>
