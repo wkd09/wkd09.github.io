@@ -339,9 +339,10 @@ a {
 
 .author__bio {
   margin: 0.65rem 0 0;
-  color: var(--lab-muted);
+  color: var(--lab-ink);
   font-size: 0.78rem;
   font-family: var(--lab-sans);
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -440,7 +441,7 @@ a {
 
 @media (prefers-color-scheme: dark) {
   .author__bio {
-    color: #d1d1d6;
+    color: var(--lab-ink);
   }
 }
 
@@ -450,10 +451,11 @@ a {
   letter-spacing: 0;
 }
 
-.layout--single .page__title {
-  margin-bottom: 0.6rem;
-  font-size: clamp(2.25rem, 4vw, 4rem);
-  line-height: 1.08;
+.layout--single .page__title,
+.layout--post .page__title {
+  margin-bottom: 0.5rem;
+  font-size: clamp(2rem, 3.25vw, 3.25rem);
+  line-height: 1.12;
   font-weight: 700;
   letter-spacing: -0.045em;
   word-break: keep-all;
@@ -466,8 +468,8 @@ a {
 
 .page__inner-wrap > header {
   max-width: 720px;
-  margin-bottom: 2.25rem;
-  padding: 3.5rem 0 0;
+  margin-bottom: 2rem;
+  padding: 3rem 0 0;
   border-bottom: 0;
 }
 
@@ -512,8 +514,8 @@ a {
 
 .page__content {
   color: var(--lab-ink);
-  font-size: 1.0625rem;
-  line-height: 1.82;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .page__content > p,
@@ -536,7 +538,7 @@ a {
 }
 
 .page__content p {
-  margin: 0 0 1.35rem;
+  margin: 0 0 1.25rem;
 }
 
 .page__content h1,
@@ -559,17 +561,17 @@ a {
 }
 
 .page__content h2 {
-  margin-top: 3.25rem;
-  margin-bottom: 1rem;
+  margin-top: 3rem;
+  margin-bottom: 0.9rem;
   padding-bottom: 0;
   border-bottom: 0;
-  font-size: 1.65rem;
+  font-size: 1.55rem;
 }
 
 .page__content h3 {
-  margin-top: 2.5rem;
+  margin-top: 2.25rem;
   margin-bottom: 0.75rem;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
 }
 
 .page__content h4 {
@@ -624,7 +626,7 @@ a {
 }
 
 .key-summary {
-  margin: 0 0 2.5rem;
+  margin: 0 0 2rem;
   padding: 1.35rem 1.5rem;
   border: 0;
   border-radius: 20px;
@@ -690,7 +692,25 @@ a {
   max-width: 100%;
 }
 
-.page__footer,
+.page__footer {
+  margin-top: 4rem;
+  border-top: 1px solid var(--lab-line);
+  background: var(--lab-soft);
+  color: var(--lab-muted);
+}
+
+.page__footer footer {
+  margin-top: 0;
+  padding: 1.75rem 1rem 2rem;
+}
+
+.page__footer .fas,
+.page__footer .fab,
+.page__footer .far,
+.page__footer .fal {
+  color: var(--lab-muted);
+}
+
 .page__meta {
   color: var(--lab-muted);
 }
@@ -731,6 +751,50 @@ a {
   border-top: 1px solid var(--lab-line);
 }
 
+.page__related .archive__item-title {
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
+
+.page__related .archive__item-excerpt {
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.page__share,
+.page__content + .pagination {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--lab-line);
+}
+
+.pagination {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--lab-line);
+}
+
+.pagination--pager,
+.pagination--pager:first-child,
+.pagination--pager:last-child {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--lab-soft);
+  font-size: 0.9rem;
+}
+
+.pagination--pager.disabled {
+  color: var(--lab-muted);
+  opacity: 0.55;
+}
+
 .pagination--pager {
   border-color: transparent;
   border-radius: 999px;
@@ -762,18 +826,29 @@ a {
 }
 
 .toc__menu {
-  padding: 0.2rem 0;
+  margin: 0.35rem 0 0;
+  padding: 0;
   font-size: 0.76rem;
 }
 
+.toc__menu li {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+}
+
 .toc__menu a {
-  padding: 0.3rem 0;
+  padding: 0.38rem 0;
+  border-bottom: 0 !important;
   border-radius: 0;
   color: var(--lab-muted);
   font-weight: 600;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-decoration: none;
 }
 
+.toc .active a,
 .toc__menu a:hover {
   background: transparent;
   color: var(--lab-accent);
@@ -1216,8 +1291,13 @@ a {
   border: 1px solid var(--lab-line);
   border-radius: 6px;
   background: var(--lab-code);
-  color: var(--lab-strong);
+  color: var(--lab-code-ink);
   font-size: 0.88em;
+}
+
+.page__content :not(pre) > code {
+  background: var(--lab-code);
+  color: var(--lab-code-ink);
 }
 
 div.highlighter-rouge,
@@ -1363,7 +1443,8 @@ figure.highlight code,
 }
 
 @media (min-width: 1024px) {
-  .layout--single #main {
+  .layout--single #main,
+  .layout--post #main {
     display: grid;
     grid-template-columns: 180px minmax(0, 720px);
     column-gap: 3.5rem;
@@ -1372,27 +1453,31 @@ figure.highlight code,
     min-width: 0;
   }
 
-  .layout--single .sidebar {
+  .layout--single .sidebar,
+  .layout--post .sidebar {
     float: none;
     width: 100%;
     min-width: 0;
     padding-right: 0;
   }
 
-  .layout--single .page {
+  .layout--single .page,
+  .layout--post .page {
     float: none;
     width: 100%;
     min-width: 0;
     padding-inline-end: 0;
   }
 
-  .layout--single .page__related {
+  .layout--single .page__related,
+  .layout--post .page__related {
     grid-column: 2;
     width: 100%;
   }
 
   .page__inner-wrap > header,
-  .layout--single .page__content {
+  .layout--single .page__content,
+  .layout--post .page__content {
     max-width: none;
   }
 
@@ -1409,7 +1494,8 @@ figure.highlight code,
 }
 
 @media (min-width: 1200px) {
-  .layout--single #main {
+  .layout--single #main,
+  .layout--post #main {
     --lab-layout-side: clamp(170px, 13vw, 208px);
     --lab-layout-content: 720px;
     --lab-layout-gap: clamp(2.5rem, 4vw, 4.5rem);
@@ -1431,13 +1517,15 @@ figure.highlight code,
   .sidebar__right {
     position: absolute;
     width: var(--lab-layout-side);
-    margin-inline-end: calc(0px - var(--lab-layout-side) - var(--lab-layout-gap));
+    inset-inline-end: calc(0px - var(--lab-layout-side) - var(--lab-layout-gap));
+    margin-inline-end: 0;
   }
 
   .sidebar__right.sticky {
     position: sticky;
     float: inline-end;
     top: 2rem;
+    transform: translateX(calc(100% + var(--lab-layout-gap)));
   }
 }
 
@@ -1455,7 +1543,8 @@ figure.highlight code,
     grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
   }
 
-  .layout--single .page {
+  .layout--single .page,
+  .layout--post .page {
     padding-right: 0;
   }
 
@@ -1533,7 +1622,8 @@ figure.highlight code,
     font-size: 0.74rem;
   }
 
-  .layout--single .page__title {
+  .layout--single .page__title,
+  .layout--post .page__title {
     font-size: clamp(2.1rem, 10vw, 2.75rem);
     line-height: 1.08;
   }
