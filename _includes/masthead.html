@@ -47,6 +47,16 @@
   (function () {
     var root = document.documentElement;
     var toggle = document.getElementById("theme-toggle");
+    var storageKey = "wkd09-theme";
+
+    try {
+      var savedTheme = window.localStorage.getItem(storageKey);
+      if (savedTheme === "light" || savedTheme === "dark") {
+        root.dataset.theme = savedTheme;
+      }
+    } catch (error) {
+      // Keep the system preference when browser storage is unavailable.
+    }
 
     function isDark() {
       return root.dataset.theme
@@ -63,7 +73,15 @@
     }
 
     toggle.addEventListener("click", function () {
-      root.dataset.theme = isDark() ? "light" : "dark";
+      var nextTheme = isDark() ? "light" : "dark";
+      root.dataset.theme = nextTheme;
+
+      try {
+        window.localStorage.setItem(storageKey, nextTheme);
+      } catch (error) {
+        // The current page still changes even when storage is unavailable.
+      }
+
       renderLabel();
     });
 
