@@ -87,3 +87,4 @@ exclude:
   - node_modules
   - vendor
   - _templates
+  - admin-app

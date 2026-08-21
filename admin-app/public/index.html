@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>장준민의 기술 블로그 · 관리자</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main>
+      <section id="editor-view" class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">BLOG ADMIN</p>
+            <h1>글 관리</h1>
+          </div>
+          <div class="topbar-actions">
+            <a href="https://wkd09.github.io" target="_blank" rel="noreferrer">블로그 보기</a>
+            <span class="local-badge"><span class="status-dot"></span>이 Mac에서만 실행 중</span>
+          </div>
+        </header>
+
+        <div class="editor-layout">
+          <aside class="post-sidebar">
+            <div class="sidebar-heading">
+              <h2>글 목록</h2>
+              <button id="new-button" type="button">새 글</button>
+            </div>
+            <input id="post-search" type="search" placeholder="파일명 검색" aria-label="글 검색">
+            <div id="post-list" class="post-list" aria-live="polite"></div>
+          </aside>
+
+          <form id="post-form" class="post-editor">
+            <div class="editor-heading">
+              <div>
+                <p id="editing-label" class="eyebrow">NEW POST</p>
+                <h2 id="editor-title">새 글 작성</h2>
+              </div>
+              <div class="editor-actions">
+                <span id="pending-status" class="pending-status">반영할 변경 없음</span>
+                <button id="publish-button" class="secondary" type="button" disabled>GitHub에 올리기</button>
+                <button id="save-button" type="submit">로컬에 저장</button>
+              </div>
+            </div>
+
+            <p id="editor-message" class="message" role="status" hidden></p>
+
+            <div class="form-grid">
+              <label class="wide">제목
+                <input id="title" name="title" required>
+              </label>
+              <label>작성일
+                <input id="date" name="date" type="date" required>
+              </label>
+              <label>주소용 이름(slug)
+                <input id="slug" name="slug" pattern="[a-z0-9가-힣]+(?:-[a-z0-9가-힣]+)*" required>
+              </label>
+              <label class="wide">요약
+                <textarea id="summary" name="summary" rows="2" required></textarea>
+              </label>
+              <label>카테고리
+                <input id="categories" name="categories" placeholder="engineering, study">
+              </label>
+              <label>태그
+                <input id="tags" name="tags" placeholder="AI, LLM, Cache">
+              </label>
+              <label class="wide">출처
+                <input id="source" name="source" placeholder="문서, 논문 또는 URL">
+              </label>
+              <label class="checkbox-label wide">
+                <input id="published" name="published" type="checkbox" checked>
+                바로 공개하기
+              </label>
+            </div>
+
+            <div class="body-heading">
+              <label for="body">본문 (Markdown)</label>
+              <div class="upload-controls">
+                <input id="image-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+                <button id="upload-button" class="secondary" type="button">이미지 업로드</button>
+              </div>
+            </div>
+            <textarea id="body" name="body" class="body-editor" spellcheck="false" required></textarea>
+            <p class="muted filename-preview">저장 파일: <code id="filename-preview"></code></p>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

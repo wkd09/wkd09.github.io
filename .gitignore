@@ -6,3 +6,4 @@ output/
 vendor/
 .bundle/
 .DS_Store
+admin-app/.admin-pending.json
