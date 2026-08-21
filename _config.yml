@@ -70,6 +70,7 @@ kramdown:
   syntax_highlighter: rouge
 
 search: true
+search_full_content: true
 after_footer_scripts:
   - /assets/js/mathjax-config.js
 

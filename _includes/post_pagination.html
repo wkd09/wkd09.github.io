@@ -1,0 +1,11 @@
+{% assign locale = include.locale | default: site.locale %}
+{% if page.previous or page.next %}
+  <nav class="pagination" aria-label="글 이동">
+    {% if page.previous %}
+      <a href="{{ page.previous.url | relative_url }}" class="pagination--pager" title="{{ page.previous.title | markdownify | strip_html | strip}}">{{ site.data.ui-text[locale].pagination_previous | default: "이전 글" }}</a>
+    {% endif %}
+    {% if page.next %}
+      <a href="{{ page.next.url | relative_url }}" class="pagination--pager" title="{{ page.next.title | markdownify | strip_html | strip}}">{{ site.data.ui-text[locale].pagination_next | default: "다음 글" }}</a>
+    {% endif %}
+  </nav>
+{% endif %}

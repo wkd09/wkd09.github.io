@@ -1,6 +1,4 @@
 main:
-  - title: "전체글"
-    url: /
   - title: "논문"
     url: /research/
   - title: "공부"

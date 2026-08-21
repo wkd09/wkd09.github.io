@@ -44,8 +44,7 @@ title: "AI, LLM, Agent를 기록합니다."
 
 <section class="latest-notes" aria-labelledby="latest-notes-title">
   <div class="latest-notes__heading">
-    <p>최근 글</p>
-    <h2 id="latest-notes-title">Latest Notes</h2>
+    <h2 id="latest-notes-title">최근 글</h2>
   </div>
 
 {% if site.posts.size > 0 %}

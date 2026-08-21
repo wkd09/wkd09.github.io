@@ -23,14 +23,26 @@
             </li>
           {%- endfor -%}
         </ul>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="테마 전환">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+          <span class="visually-hidden">테마 전환</span>
+        </button>
         {% if site.search == true %}
         <button class="search__toggle" type="button">
-          <span class="visually-hidden">{{ site.data.ui-text[locale].search_label | default: "Toggle search" }}</span>
-          <i class="fas fa-search"></i>
+          <span class="visually-hidden">{{ site.data.ui-text[locale].search_label | default: "검색 열기/닫기" }}</span>
+          <i class="fas fa-search" aria-hidden="true"></i>
         </button>
         {% endif %}
+        <button class="mobile-nav__toggle" type="button" aria-label="메뉴 열기/닫기" aria-expanded="false" aria-controls="mobile-nav-links">
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+        <ul id="mobile-nav-links" class="mobile-nav__links hidden">
+          {%- for link in site.data.navigation.main -%}
+            <li><a href="{{ link.url | relative_url }}">{{ link.title }}</a></li>
+          {%- endfor -%}
+        </ul>
         <button class="greedy-nav__toggle hidden" type="button">
-          <span class="visually-hidden">{{ site.data.ui-text[locale].menu_label | default: "Toggle menu" }}</span>
+          <span class="visually-hidden">{{ site.data.ui-text[locale].menu_label | default: "메뉴 열기/닫기" }}</span>
           <div class="navicon"></div>
         </button>
         <ul class="hidden-links hidden"></ul>
@@ -39,14 +51,12 @@
   </div>
 </div>
 
-<div class="theme-preview">
-  <button id="theme-toggle" type="button" aria-label="테마 전환"></button>
-</div>
-
 <script>
   (function () {
     var root = document.documentElement;
     var toggle = document.getElementById("theme-toggle");
+    var mobileMenuToggle = document.querySelector(".mobile-nav__toggle");
+    var mobileMenu = document.getElementById("mobile-nav-links");
     var storageKey = "wkd09-theme";
 
     try {
@@ -65,11 +75,15 @@
     }
 
     function renderLabel() {
-      toggle.setAttribute(
-        "aria-label",
-        isDark() ? "라이트 테마로 전환" : "다크 테마로 전환"
-      );
-      toggle.setAttribute("aria-pressed", String(!isDark()));
+      var dark = isDark();
+      var label = dark ? "라이트 테마로 전환" : "다크 테마로 전환";
+      var icon = toggle.querySelector("i");
+      var text = toggle.querySelector("span");
+
+      toggle.setAttribute("aria-label", label);
+      toggle.setAttribute("aria-pressed", String(dark));
+      icon.className = dark ? "fas fa-sun" : "fas fa-moon";
+      text.textContent = label;
     }
 
     toggle.addEventListener("click", function () {
@@ -83,6 +97,23 @@
       }
 
       renderLabel();
+    });
+
+    function closeMobileMenu() {
+      mobileMenu.classList.add("hidden");
+      mobileMenuToggle.setAttribute("aria-expanded", "false");
+      mobileMenuToggle.querySelector("i").className = "fas fa-bars";
+    }
+
+    mobileMenuToggle.addEventListener("click", function () {
+      var willOpen = mobileMenu.classList.contains("hidden");
+      mobileMenu.classList.toggle("hidden", !willOpen);
+      mobileMenuToggle.setAttribute("aria-expanded", String(willOpen));
+      mobileMenuToggle.querySelector("i").className = willOpen ? "fas fa-times" : "fas fa-bars";
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") closeMobileMenu();
     });
 
     renderLabel();
