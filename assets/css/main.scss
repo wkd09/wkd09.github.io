@@ -1623,7 +1623,6 @@ figure.highlight code,
     float: none;
     top: 0;
     height: 100%;
-    transform: translateX(calc(100% + var(--lab-layout-gap)));
   }
 
   .sidebar__right.sticky .toc {

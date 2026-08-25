@@ -29,7 +29,7 @@ source: "arXiv:2608.16157"
 
 > Open-weight 모델을 내려받을 수 있다는 것과 개인이 그 모델을 실제로 돌릴 수 있다는 것은 다르다.
 
-거대한 Mixture-of-Experts(MoE) 모델은 token마다 일부 expert만 활성화하므로 계산량은 의외로 작다. 하지만 **전체 expert weight는 여전히 어딘가에 저장되어 있어야 한다.** 수백 GB에 이르는 expert pool이 VRAM에 들어가지 않으면 CPU DRAM에 두고 필요할 때 가져와야 한다. 이때 병목은 단순 GPU 연산이 아니라 PCIe 전송, DRAM bandwidth, CPU 계산, VRAM cache 사이의 조율로 옮겨간다.
+거대한 Mixture-of-Experts(MoE) 모델은 token마다 일부 expert만 활성화하므로 계산량이 전체 모델 크기에 비해 작다. 하지만 **전체 expert weight는 여전히 어딘가에 저장되어 있어야 한다.** 수백 GB에 이르는 expert pool이 VRAM에 들어가지 않으면 CPU DRAM에 두고 필요할 때 가져와야 한다. 이때 병목은 단순 GPU 연산이 아니라 PCIe 전송, DRAM bandwidth, CPU 계산, VRAM cache 사이의 조율로 옮겨간다.
 
 FreeToken은 개인용 PC를 작은 GPU 한 장으로 보지 않는다. GPU, CPU, DRAM, PCIe를 묶은 **하나의 이기종 추론 플랫폼**으로 보고, 실행 단계와 현재 자원 상태에 따라 일을 다시 배분한다.
 
@@ -51,7 +51,7 @@ MoE model
 token -> router -> 일부 expert만 사용
 ```
 
-이 sparse activation 덕분에 한 token을 계산하는 데 필요한 FLOPs와 순간적인 GPU working set은 전체 모델 크기보다 훨씬 작다. 284B 모델이라도 활성 경로만 보면 RTX 5090의 32GB VRAM으로 계산할 가능성이 생긴다.
+이 sparse activation 덕분에 한 token을 계산하는 데 필요한 FLOPs와 활성 parameter footprint는 전체 모델 크기보다 훨씬 작다. 284B 모델이라도 활성 경로만 보면 RTX 5090의 32 GB VRAM으로 계산할 가능성이 생긴다.
 
 그러나 **활성 parameter가 작다는 것이 전체 model weight가 작다는 뜻은 아니다.** 다음 token이 어떤 expert를 고를지 미리 확정할 수 없으므로 전체 expert pool은 CPU DRAM이나 storage에 남아 있어야 한다.
 
@@ -101,7 +101,7 @@ Decode : token은 적고, expert working set은 sparse
 
 Prefill은 결국 layer의 거의 모든 expert를 사용한다. 이 상황에서 router 결과가 나온 뒤 필요한 expert를 하나씩 요청하면 PCIe 전송이 잘게 쪼개지고, GPU는 weight가 도착할 때까지 기다리게 된다.
 
-DeepSeek-V4-Flash의 FP4 expert pool은 약 140GB다. 논문에 따르면 이를 한 차례 전송하는 데 RTX 5090의 PCIe 5.0 x16에서는 약 2초, RTX 4090/3090의 PCIe 4.0 x16에서는 약 5초, laptop의 x8 link에서는 10초 이상 걸릴 수 있다.
+DeepSeek-V4-Flash의 FP4 expert pool은 약 140 GB다. 논문에 따르면 이를 한 차례 전송하는 데 RTX 5090의 PCIe 5.0 ×16에서는 약 2초, RTX 4090/3090의 PCIe 4.0 ×16에서는 약 5초, laptop의 ×8 link에서는 10초 이상 걸릴 수 있다.
 
 ### Full-layer double buffering
 
@@ -301,7 +301,7 @@ FreeToken에서 CPU DRAM의 전체 expert pool은 source of truth다. GPU expert
 
 Engine을 재시작하거나 host의 전체 expert pool을 다시 읽지 않고도 memory split을 조정한다.
 
-Startup도 줄인다. FreeToken Weight(FTW) format은 model별 checkpoint를 runtime이 사용할 expert-bank layout으로 미리 정규화한다. Disk에서 최종 host layout으로 바로 읽고, 빈 buffer를 먼저 pin하고 zeroing한 뒤 덮어쓰는 비용을 피한다. GPU cache는 별도 warm-up을 강제하지 않고 첫 요청의 일반적인 miss 처리 과정에서 자연스럽게 채운다.
+Startup도 줄인다. FreeToken Weight(FTW) format은 model별 checkpoint를 runtime이 사용할 expert-bank layout으로 미리 정규화한다. Disk에서 최종 host layout으로 바로 읽어 buffer를 채운 뒤 memory를 pin한다. 이 순서로 빈 buffer를 먼저 pin할 때 생기는 page fault와 zero-fill 비용을 피한다. GPU cache는 별도 warm-up을 강제하지 않고 첫 요청의 일반적인 miss 처리 과정에서 자연스럽게 채운다.
 
 ## 9. 실험 환경
 
@@ -315,18 +315,18 @@ Startup도 줄인다. FreeToken Weight(FTW) format은 model별 checkpoint를 run
 
 | 모델 | 전체 / 활성 parameter | Expert precision | 주요 hardware |
 | --- | --- | --- | --- |
-| Qwen3.6-35B-A3B | 35B / 약 3B | BF16, laptop은 NVFP4 | RTX 4060-5090 |
+| Qwen3.6-35B-A3B | 35B / 약 3B | BF16, laptop은 NVFP4 | RTX 4060–5090 |
 | DeepSeek-V4-Flash | 284B / 13B | MXFP4 | RTX 5090 |
-| GLM-5.2 | 753B / 40B | NVFP4 | RTX PRO 6000 96GB |
+| GLM-5.2 | 753B / 40B | NVFP4 | RTX PRO 6000 96 GB |
 
 Workload는 단순한 synthetic token generation이 아니라 네 가지 agent scenario를 사용한다.
 
 1. AIME math reasoning: single-turn, long chain-of-thought
 2. OpenCode coding agent: SWE-bench issue와 실제 tool execution
-3. Claude Code coding agent: subagent의 concurrent request와 56-65K token session
+3. Claude Code coding agent: subagent의 concurrent request와 56–65K token session
 4. OpenClaw email/calendar agent: 약 24.5K token system context와 13개 turn
 
-Baseline은 llama.cpp, Ollama, KTransformers, MoE-Infinity다. 비교 가능한 경우 같은 precision과 bit-identical expert block을 사용한다.
+Baseline은 llama.cpp, Ollama, KTransformers, MoE-Infinity다. Qwen3.6은 모든 engine에서 BF16을 사용했고, DeepSeek-V4-Flash는 모든 engine이 native MXFP4 expert block을 bit-identical하게 사용했다.
 
 ## 10. End-to-End 결과
 
@@ -334,15 +334,15 @@ RTX 5090에서 Qwen3.6-35B-A3B와 DeepSeek-V4-Flash를 네 workload로 실행한
 
 ![FreeToken end-to-end serving 결과](/assets/images/blog/freetoken-end-to-end-results.png)
 
-*위쪽은 decode throughput, 아래쪽은 mean TTFT다. x 표시는 해당 engine이 그 configuration을 실행하지 못했다는 뜻이다. 출처: FreeToken Figure 3.*
+*위쪽은 decode throughput, 아래쪽은 mean TTFT다. × 표시는 해당 engine이 그 configuration을 실행하지 못했다는 뜻이다. 출처: FreeToken Figure 3.*
 
 ### Decode throughput
 
 FreeToken은 RTX 5090에서 다음 성능을 보고한다.
 
-- Qwen3.6-35B-A3B: 77-83 tok/s
-- DeepSeek-V4-Flash: 22-25 tok/s
-- 각 workload의 가장 강한 baseline 대비 각각 1.8-2.3배, 1.5-1.9배
+- Qwen3.6-35B-A3B: 77–83 tok/s
+- DeepSeek-V4-Flash: 22–25 tok/s
+- 각 workload의 가장 강한 baseline 대비 각각 1.8–2.3배, 1.5–1.9배
 
 Agent workload가 복잡해져도 single-turn W1 대비 decode rate 변화가 12% 이내였다. 반면 일부 baseline은 context와 agent pattern에 따라 더 크게 느려졌다. 논문이 single-stream benchmark만으로 agent serving 성능을 판단하면 안 된다고 강조하는 이유다.
 
@@ -357,7 +357,7 @@ Mean TTFT에서는 FreeToken이 6개의 multi-turn model-workload 조합 중 5�
 - Ollama: 최대 179초
 - KTransformers: 최대 946초
 
-Agent client에는 idle watchdog나 request timeout이 있다. 따라서 tail TTFT는 단지 평균 latency보다 조금 나쁜 문제가 아니라, tool workflow 전체가 timeout으로 실패할 수 있는 availability 문제다.
+Agent client에는 idle watchdog 또는 request timeout이 있다. 따라서 tail TTFT는 단지 평균 latency보다 조금 나쁜 문제가 아니라, tool workflow 전체가 timeout으로 실패할 수 있는 availability 문제다.
 
 ## 11. 어떤 설계가 성능을 만들었는가
 
@@ -367,7 +367,7 @@ Agent client에는 idle watchdog나 request timeout이 있다. 따라서 tail TT
 
 ### Double buffering의 효과
 
-Qwen3.6 BF16, RTX 5090에서 8,192-token prefill chunk는 1.19-1.22초가 걸렸다. 64.4GB expert pool을 측정 PCIe bandwidth 52.7GB/s로 한 번 보내는 시간에 가깝다. 즉 GPU expert 계산이 전송 뒤에 거의 숨겨지고 prefill이 transfer-bound 상태에 도달한 것이다.
+Qwen3.6 BF16, RTX 5090에서 8,192-token prefill chunk는 1.19–1.22초가 걸렸다. 64.4 GB expert pool을 측정 PCIe bandwidth 52.7 GB/s로 한 번 보내는 시간에 가깝다. 즉 GPU expert 계산이 전송 뒤에 거의 숨겨지고 prefill이 transfer-bound 상태에 도달한 것이다.
 
 두 번째 buffer를 제거해 전송과 계산을 직렬화하면 throughput은 prompt 4K에서 19%, 8K에서 25%, 16K에서 26% 감소했다. Prompt가 길수록 overlap으로 숨길 수 있는 계산 비중이 커진다.
 
@@ -388,21 +388,23 @@ Prefill에서 선택한 placement보다 decode 중 실제 route를 계속 따라
 
 *RTX 4060 laptop부터 RTX 5090까지는 Qwen3.6 coding-agent workload, RTX PRO 6000은 GLM-5.2 math workload 결과다. 마지막 열은 별도의 frontier-scale demonstration이므로 앞 열과 model/workload가 다르다. 출처: FreeToken Figure 5.*
 
-다섯 consumer system에서 FreeToken은 가장 빠른 baseline보다 1.3-2.1배 높은 decode throughput을 보였다.
+Figure 5의 다섯 consumer system에서는 같은 OpenCode workload로 Qwen3.6을 비교했다. FreeToken은 각 system의 가장 빠른 baseline보다 1.3–2.1배 높은 decode throughput을 보였다. 특히 RTX 4060 laptop 8 GB의 NVFP4 build는 39.3 tok/s를 기록했다.
 
-- RTX 4060 laptop 8GB: Qwen3.6 NVFP4를 39.3 tok/s로 실행
-- RTX 5090 desktop 32GB: DeepSeek-V4-Flash 284B를 21.5 tok/s로 실행
-- RTX PRO 6000 96GB: GLM-5.2 753B를 14.9 tok/s로 실행
-
-첫 번째 결과는 논문이 인용한 production Codex trace의 median decode speed 33 tok/s보다 높다. 다만 서로 다른 모델, 서비스 환경, 측정 조건을 비교한 참고선이므로 “Codex보다 모델이 빠르다”는 품질 또는 end-to-end 비교로 해석하면 안 된다.
+이 수치는 논문이 인용한 production Codex trace의 median decode speed 33 tok/s보다 높다. 다만 서로 다른 모델, 서비스 환경, 측정 조건을 비교한 참고선이므로 “Codex보다 모델이 빠르다”는 품질 또는 end-to-end 비교로 해석하면 안 된다.
 
 ![각 hardware tier에서 실행 가능한 가장 강한 모델의 agentic decode speed](/assets/images/blog/freetoken-agentic-decode-speed.png)
 
 *각 hardware tier에서 그 장비가 수용할 수 있는 모델을 선택한 결과다. RTX 4060 laptop은 Qwen3.6-35B, RTX 5090 desktop은 DeepSeek-V4-Flash 284B, RTX PRO 6000은 GLM-5.2 753B를 사용하므로 세 막대를 같은 모델의 hardware scaling 결과로 읽으면 안 된다. 출처: FreeToken Figure 1(b) 일부.*
 
+Figure 1(b)는 같은 모델의 scaling이 아니라 각 hardware tier가 실행할 수 있는 가장 강한 모델을 보여준다.
+
+- RTX 4060 laptop 8 GB: Qwen3.6 NVFP4를 39.3 tok/s로 실행
+- RTX 5090 desktop 32 GB: DeepSeek-V4-Flash 284B를 21.5 tok/s로 실행
+- RTX PRO 6000 96 GB: GLM-5.2 753B를 14.9 tok/s로 실행
+
 같은 RTX 5090 GPU를 사용한 server와 desktop 비교도 흥미롭다. Host memory bandwidth가 높은 server에서 dual-channel desktop으로 옮겼을 때 FreeToken의 decode rate는 약 4%만 감소했지만, llama.cpp는 server 성능의 80%만 유지했다. CPU, GPU, PCIe를 측정 bandwidth에 맞춰 나누는 정책이 host 구성 차이를 흡수한 결과로 해석할 수 있다.
 
-GLM-5.2 753B는 433GB checkpoint이며 RTX PRO 6000의 VRAM은 96GB다. FreeToken은 나머지를 512GiB host memory에 두고 14.9 tok/s를 기록했다. llama.cpp의 7.3 tok/s보다 약 2배 높았고 mean TTFT는 7.5초 대 7.8초로 비슷했다.
+GLM-5.2 753B의 checkpoint는 433 GB이며 RTX PRO 6000의 VRAM은 96 GB다. FreeToken은 전체 expert pool을 512 GiB host memory에 둔 구성에서 14.9 tok/s를 기록했다. llama.cpp의 7.3 tok/s보다 약 2배 높았고 mean TTFT는 7.5초 대 7.8초로 비슷했다.
 
 ## 13. 기존 시스템과 무엇이 다른가
 
@@ -423,7 +425,7 @@ FreeToken의 기여를 특정 cache algorithm 하나로만 보면 작아 보일 
 
 ### 아직 v1 시스템 논문이다
 
-이 글이 다루는 것은 2026년 8월 공개된 arXiv v1 결과다. 넓은 hardware 범위를 다루지만 모든 조합을 같은 model과 workload로 평가한 것은 아니다. 특히 RTX PRO 6000의 GLM-5.2 결과는 Qwen3.6 coding-agent 실험과 분리된 demonstration이다.
+이 글이 다루는 것은 2026년 8월 공개된 arXiv v1에서 저자들이 보고한 측정 결과다. 아직 동료 심사나 독립 재현을 거친 결과로 읽어서는 안 된다. 넓은 hardware 범위를 다루지만 모든 조합을 같은 model과 workload로 평가한 것도 아니다. 특히 RTX PRO 6000의 GLM-5.2 결과는 Qwen3.6 coding-agent 실험과 분리된 demonstration이다.
 
 ### End-to-end wall-clock 비교는 아니다
 
@@ -435,7 +437,7 @@ VRAM 요구량을 줄였다고 model weight 자체가 사라지는 것은 아니
 
 ### `q*`는 측정값과 단순화된 bandwidth model에 의존한다
 
-정책은 expert size와 bandwidth-bound execution을 전제로 branch 시간을 근사한다. 실제 desktop에서는 다른 process가 DRAM과 PCIe를 동시에 사용할 수 있다. FreeToken은 배포 시 bandwidth를 측정하고 VRAM을 재구성하지만, 논문만으로는 급격한 runtime contention에서 $B_P$, $B_H$를 얼마나 자주 다시 추정하는지까지 충분히 알기 어렵다.
+정책은 expert size와 bandwidth-bound execution을 전제로 branch 시간을 근사한다. 실제 desktop에서는 다른 process가 DRAM과 PCIe를 동시에 사용할 수 있다. FreeToken은 배포 시 $B_P$, $B_H$를 측정하지만, 논문은 급격한 runtime contention이 생겼을 때 이 값을 다시 추정하는지, 그렇다면 얼마나 자주 갱신하는지 설명하지 않는다. VRAM cache 재구성은 별도의 memory 관리 기능이므로 bandwidth 재측정과 같은 기능으로 읽으면 안 된다.
 
 ### Semantic anchor는 agent protocol에 의존한다
 
