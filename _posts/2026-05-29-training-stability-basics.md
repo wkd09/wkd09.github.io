@@ -1,7 +1,7 @@
 ---
 title: "딥러닝 학습 안정화 기초: Activation, Bias-Variance, Overfitting"
 date: 2026-05-29 00:50:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -124,7 +124,7 @@ Underfitting은 학습 데이터조차 제대로 학습하지 못한 상태다.
 
 Underfitting은 모델 capacity를 늘리거나 학습을 더 진행하거나 feature를 개선하는 방식으로 완화할 수 있다.
 
-## 정리
+## 내가 이해한 핵심
 
 딥러닝 학습 안정화는 여러 요소가 함께 작동한다.
 

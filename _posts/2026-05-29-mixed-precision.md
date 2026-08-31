@@ -1,7 +1,7 @@
 ---
 title: "Mixed Precision 정리: 메모리와 정밀도의 trade-off 다루기"
 date: 2026-05-29 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -12,68 +12,88 @@ tags:
 source: "Velog PDF - Mixed Precision"
 ---
 
-Mixed Precision은 GPU resource를 효율적으로 사용하기 위한 대표적인 학습 기법이다.
+Mixed Precision은 model training에서 낮은 precision과 높은 precision을 함께 사용하는 방법이다.
 
-단순히 개념만 보는 것이 아니라, 어떤 병목 때문에 이 방법이 나왔고 메모리와 정밀도 사이에서 어떤 trade-off가 생기는지 살펴보자. Mixed Precision을 이해하기 전에 먼저 부동소수점 표현부터 복습한다.
+모든 값을 FP32로 계산하면 안정적이지만 memory 사용량과 memory traffic이 커진다. 반대로 모든 값을 FP16으로 바꾸면 빠르고 memory를 적게 사용하지만 작은 gradient가 0이 되는 underflow나 큰 값이 표현 범위를 넘는 overflow가 생길 수 있다.
+
+핵심은 하나의 dtype만 고집하지 않는 것이다.
+
+> 큰 matrix operation은 FP16 또는 BF16으로 계산하고, 정밀도가 필요한 값은 FP32로 유지한다.
+
+이 글에서는 FP16과 BF16의 차이, FP32 master weight와 loss scaling, PyTorch AMP의 실행 흐름을 정리한다.
 
 ## Floating Point Format
 
 ![Mixed Precision image 1](https://velog.velcdn.com/images/junmin0413/post/6ae453b5-0c3b-4b8b-ad88-7c19aaa2457b/image.png)
 
-- BF16: 총 16bits이며, 지수 범위가 8bits, 가수 범위가 7bits
-- FP16: 총 16bits이며, 지수 범위가 5bits, 가수 범위가 10bits
-- FP32: 총 32bits이며, 지수 범위가 8bits, 가수 범위가 23bits
+| Format | Sign | Exponent | Fraction | 특징 |
+| --- | ---: | ---: | ---: | --- |
+| FP16 | 1 bit | 5 bits | 10 bits | BF16보다 정밀하지만 표현 범위가 좁음 |
+| BF16 | 1 bit | 8 bits | 7 bits | FP32와 exponent 범위가 같아 overflow에 강함 |
+| FP32 | 1 bit | 8 bits | 23 bits | 넓은 범위와 높은 정밀도, memory 사용량이 큼 |
 
 지수는 숫자의 크기와 표현 가능한 최대/최소값에 영향을 주고, 가수는 숫자의 정밀도에 영향을 준다.
 
-즉 표현 범위는 대체로 `FP16 < BF16 < FP32`이고, 정밀도는 `BF16 < FP16 < FP32`이다. 그래서 모델 학습 시 항상 BF16이 FP16보다 좋다고 말할 수는 없다.
+즉 표현 범위는 대체로 `FP16 < BF16 ≈ FP32`이고, fraction 정밀도는 `BF16 < FP16 < FP32`다. BF16은 FP16보다 표현 범위가 넓지만 fraction bit는 적다.
 
-FP16 방식으로 학습하면 저장 공간을 아끼고 학습 시간도 줄일 수 있다. 하지만 정밀도가 낮아 gradient가 너무 크거나 작은 경우 오차가 발생할 수 있고, 이 오차가 누적되면 학습이 불안정해질 수 있다.
+낮은 precision을 사용하면 tensor 크기와 memory traffic을 줄일 수 있고, 지원되는 GPU에서는 Tensor Core를 활용해 matrix multiplication도 빨라질 수 있다. 문제는 gradient가 너무 작거나 큰 경우다. 이 오차가 누적되면 학습이 불안정해질 수 있다.
 
 ![Mixed Precision image 2](https://velog.velcdn.com/images/junmin0413/post/03e8c4f7-d871-4e1a-9e04-868f86e6a3e6/image.png)
 
-반대로 FP32로만 학습하면 배치 사이즈를 크게 늘리기 어렵고, 메모리를 많이 차지해 메모리 통신 시간도 커진다. 이러한 문제를 줄이기 위해 Mixed Precision이 사용된다.
+반대로 FP32만 사용하면 같은 GPU에 넣을 수 있는 batch size가 작아지고 memory read/write도 늘어난다. Mixed Precision은 이 두 문제 사이에서 필요한 precision만 남긴다.
 
 ## Mixed Precision
 
-Mixed Precision은 메모리 사용량과 정밀도 사이의 trade-off를 다루기 위한 방법이다. 핵심은 모든 값을 낮은 precision으로 처리하는 것이 아니라, 필요한 부분은 FP32로 유지하고 계산량이 큰 부분은 FP16/BF16을 활용하는 것이다.
+Mixed Precision에서는 operation마다 적절한 dtype을 선택한다.
+
+```text
+Matrix multiplication / convolution -> FP16 또는 BF16
+일부 reduction과 loss             -> FP32
+Master weight와 optimizer state    -> FP32로 유지할 수 있음
+```
+
+PyTorch의 `autocast`는 operation별 dtype 선택을 자동으로 처리한다. 무조건 모든 tensor를 FP16으로 cast하는 방식과 다르다.
 
 ## 방법론
 
 ![Mixed Precision image 3](https://velog.velcdn.com/images/junmin0413/post/53ad5f17-5197-4a76-ba64-8fd736945a04/image.png)
 
-1. FP32 weight에 대한 FP16 copy weight를 만든다. FP16은 forward/backward에서 사용한다.
-2. FP16 copy weight로 forward pass를 진행한다.
-3. forward pass로 계산된 FP16 prediction 값을 FP32로 casting한다.
-4. FP32 prediction을 이용해 FP32 loss를 계산하고 여기에 scaling factor S를 곱한다.
-5. scaled FP32 loss를 FP16으로 casting한다.
-6. scaled FP16 loss로 backward propagation을 진행하고 gradient를 계산한다.
-7. FP16 gradient를 FP32로 casting하고, 이를 scaling factor S로 다시 나눈다. chain rule로 인해 모든 gradient는 같은 크기로 scaling된 상태다.
-8. FP32 gradient를 이용해 FP32 weight를 update한다.
+논문에서 설명하는 FP16 mixed precision의 기본 흐름은 다음과 같다.
 
-정리하면 FP32 weight는 저장해두고, FP16 copy weight로 forward/backward pass를 진행한 뒤, FP16에서 얻은 gradient를 이용해 FP32 weight를 update한다. 즉 연산할 때는 FP16으로 메모리를 줄이고, update할 때는 FP32로 정밀도를 높인다.
+1. FP32 master weight를 유지하고 forward/backward용 FP16 copy를 만든다.
+2. FP16 weight로 forward pass를 계산한다.
+3. Loss를 FP32에서 계산하고 scaling factor $S$를 곱한다.
+4. Scaled loss로 backward를 수행해 작은 gradient가 FP16 범위에서 사라지지 않게 한다.
+5. Gradient를 FP32로 바꾸고 $S$로 나눠 원래 크기로 복원한다.
+6. FP32 master weight를 update한다.
+
+즉 계산량이 큰 forward/backward는 FP16으로 처리하고 parameter update에는 FP32 precision을 남긴다.
 
 ![Mixed Precision image 4](https://velog.velcdn.com/images/junmin0413/post/41acfc22-acba-4b21-8c0a-6cbf3f75c6ab/image.png)
 
-계속 등장한 scaling factor S는 무엇이고 어떻게 정할까?
+### Loss Scaling
 
-loss scaling은 loss를 키워서 underflow를 막기 위해 사용하는 방법이다. 논문에서는 경험적인 값을 선택하거나, gradient 통계를 사용할 수 있는 경우 gradient의 maximum absolute value가 65,504 근처가 되도록 맞추는 방법을 설명한다. 다만 scaling factor가 너무 크면 overflow가 발생할 수 있으므로 주의해야 한다.
+FP16에서 아주 작은 gradient는 표현 범위 아래로 내려가 0이 될 수 있다. Loss에 $S$를 곱하면 chain rule에 따라 모든 gradient도 $S$배 커진다. Update 직전에 다시 $S$로 나누면 수학적으로 같은 gradient를 얻으면서 underflow를 줄일 수 있다.
+
+문제는 $S$가 너무 크면 overflow가 생긴다는 점이다. PyTorch `GradScaler`는 overflow를 감지해 해당 update를 건너뛰고 scale을 낮춘다. 안정적인 step이 이어지면 scale을 다시 높인다.
+
+BF16은 FP32와 exponent 범위가 같아 FP16보다 loss scaling이 덜 필요한 경우가 많다.
 
 ## 실험
 
-NVIDIA의 실험 결과를 보자.
+NVIDIA의 mixed precision 연구에서는 translation, speech recognition, language modeling 등 여러 task를 비교했다.
 
 ![Mixed Precision image 5](https://velog.velcdn.com/images/junmin0413/post/f22a078b-80ed-4aff-b3a5-6255bf1b1129/image.png)
 
-Translation, speech recognition, language modeling 등에서 실험을 진행했고, 속도가 2~4.9배 빨라지는 것을 볼 수 있다.
+논문 기준으로 일부 workload에서 FP32 대비 2~4.9배 speedup을 기록했다.
 
 ![Mixed Precision image 6](https://velog.velcdn.com/images/junmin0413/post/24dfb2e7-791d-4f82-a7fc-4c976d807257/image.png)
 
-성능도 FP32와 거의 차이가 없거나 더 높은 경우를 볼 수 있다. 성능 상승은 batch size 증가로 noisy한 gradient가 줄어드는 효과와 관련이 있을 수 있다.
+Model quality도 FP32와 비슷하게 유지됐다. 다만 이 배수는 당시 GPU와 workload에서 나온 결과다. 현재 환경의 speedup은 GPU architecture, Tensor Core 지원, model shape와 memory bottleneck에 따라 달라진다.
 
 ## 실습
 
-PyTorch를 통해 실습해보자.
+PyTorch에서는 `autocast`와 `GradScaler`를 함께 사용할 수 있다.
 
 ```python
 use_amp = True
@@ -96,6 +116,25 @@ for epoch in range(epochs):
 
 end_timer_and_print("Mixed precision:")
 ```
+
+`autocast`는 operation별 dtype을 선택하고, `GradScaler`는 FP16 gradient underflow를 줄인다. BF16을 사용할 때는 일반적으로 `GradScaler` 없이 `autocast(dtype=torch.bfloat16)`만 사용하는 경우가 많다.
+
+## 내가 이해한 핵심
+
+Mixed Precision은 모든 값을 낮은 precision으로 바꾸는 방법이 아니다.
+
+```text
+낮은 precision
+-> matrix operation과 memory traffic을 줄임
+
+FP32 유지
+-> 작은 update와 optimizer state의 안정성 확보
+
+Loss scaling
+-> FP16에서 작은 gradient가 0이 되는 문제 완화
+```
+
+핵심은 속도와 정확도 중 하나를 포기하는 것이 아니라, 각 operation에 필요한 precision만 사용하는 것이다. 실제 적용에서는 FP16과 BF16 중 무엇을 쓰는지, overflow로 update가 skip되는지, 최종 loss가 FP32 baseline과 비슷하게 수렴하는지를 함께 확인해야 한다.
 
 ## 참고 자료
 

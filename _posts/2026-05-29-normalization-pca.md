@@ -1,7 +1,7 @@
 ---
 title: "Normalization과 PCA 정리"
 date: 2026-05-29 13:50:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -15,7 +15,19 @@ source: "Notion PDF Export - Normalization, PCA"
 
 <small>Image: [Wikimedia Commons - Gaussian scatter PCA](https://commons.wikimedia.org/wiki/Special:FilePath/GaussianScatterPCA.svg)</small>
 
-Normalization은 학습을 안정적으로 만들기 위해 값의 분포를 조정하는 방법이다. PCA는 데이터의 중요한 분산 방향을 찾아 차원을 줄이는 방법이다. 둘 다 데이터를 더 다루기 쉬운 형태로 바꾼다는 공통점이 있다.
+Normalization과 PCA는 모두 값의 분포를 다루지만 목적은 다르다.
+
+```text
+Normalization
+activation이나 feature의 scale을 맞춘다
+-> 학습 안정화
+
+PCA
+분산이 큰 방향으로 feature space를 다시 만든다
+-> 차원 축소
+```
+
+이 글에서는 Batch Normalization과 Layer Normalization의 차이, PCA가 principal component를 찾는 이유를 정리한다.
 
 ## Batch Normalization
 
@@ -38,39 +50,64 @@ $$
 ![normalization formulas](/assets/images/blog/normalization-formulas.png)
 ![batch norm algorithm](/assets/images/blog/batch-norm-algorithm.png)
 
-Batch Normalization의 목적은 layer를 통과할 때 activation 분포가 계속 바뀌는 문제를 줄이는 것이다. 이를 internal covariate shift 관점에서 설명한다. 분포가 안정되면 더 큰 learning rate를 사용할 수 있고, 학습이 빨라지며, 어느 정도 regularization 효과도 생긴다.
+정규화한 값에 학습 가능한 $\gamma$, $\beta$를 다시 적용하므로 model이 필요한 scale과 shift를 복원할 수 있다.
 
-훈련 중에는 mini-batch의 평균과 분산을 사용한다. 추론 중에는 학습 과정에서 누적한 running mean과 running variance를 사용한다. 이 차이를 이해하지 못하면 train과 inference 결과가 달라지는 문제를 디버깅하기 어렵다.
+Batch Normalization은 원 논문에서 layer를 통과할 때 activation 분포가 계속 바뀌는 internal covariate shift를 줄이는 방법으로 설명됐다. 실제로는 optimization landscape를 더 안정적으로 만드는 효과 등 여러 관점으로 설명된다. 중요한 것은 batch 통계를 사용한다는 점이다.
 
-Batch Normalization은 batch size가 충분히 클 때 안정적으로 동작한다. batch size가 너무 작으면 batch 통계가 noisy해져 오히려 성능이 흔들릴 수 있다. 이 경우 Group Normalization이나 Layer Normalization을 고려할 수 있다.
+Training에서는 현재 mini-batch의 평균과 분산을 사용한다. Inference에서는 학습 중 누적한 running mean과 running variance를 사용한다.
+
+```text
+train mode -> 현재 batch statistics
+eval mode  -> running statistics
+```
+
+이 차이 때문에 inference 전에 `model.eval()`을 호출하지 않으면 결과가 달라질 수 있다.
+
+Batch size가 너무 작으면 평균과 분산 추정이 noisy해질 수 있다. 이 경우 Group Normalization이나 Layer Normalization을 고려할 수 있다.
 
 또한 fine-tuning에서는 BatchNorm layer를 어떻게 다룰지도 중요하다. pretrained CNN을 작은 데이터셋에 맞출 때 running statistics를 계속 업데이트하면 성능이 나빠질 수 있어, BatchNorm을 freeze하는 전략을 쓰기도 한다.
 
 ## Layer Normalization
 
-Layer Normalization은 batch 방향이 아니라 하나의 sample 내부 hidden dimension을 기준으로 정규화한다.
+Layer Normalization은 batch 방향이 아니라 sample 하나의 hidden dimension을 기준으로 평균과 분산을 구한다.
 
-Batch Normalization은 batch size가 작거나 sequence 길이가 바뀌는 문제에서 불안정할 수 있다. 반면 Layer Normalization은 각 token 또는 sample 내부에서 계산되므로 batch size에 덜 민감하다.
+각 token 또는 sample 내부에서 계산하므로 다른 sample과 batch size에 의존하지 않는다.
 
-Transformer 계열 모델에서 Layer Normalization이 많이 쓰이는 이유도 여기에 있다. sequence 모델은 batch와 time dimension의 구조가 복잡하기 때문에, layer 단위로 안정화하는 방식이 더 잘 맞는다.
+Transformer에서 Layer Normalization을 많이 사용하는 이유도 여기에 있다. Sequence 길이와 batch 구성이 달라져도 같은 방식으로 적용할 수 있다.
 
-Transformer에서는 LayerNorm의 위치도 중요하다. Post-LN 구조는 attention이나 feed-forward block 뒤에 normalization을 두고, Pre-LN 구조는 block 앞에 normalization을 둔다. 깊은 Transformer에서는 Pre-LN이 gradient 흐름을 더 안정적으로 만들어 학습이 쉬운 경우가 많다.
+Transformer에서는 LayerNorm의 위치도 중요하다.
+
+```text
+Post-LN : sub-layer -> residual -> LayerNorm
+Pre-LN  : LayerNorm -> sub-layer -> residual
+```
+
+깊은 Transformer에서는 Pre-LN이 residual path의 gradient 흐름을 안정적으로 만드는 경우가 많다.
 
 ## Batch Norm과 Layer Norm 비교
 
-Batch Normalization은 같은 feature를 batch 전체에 대해 정규화한다. CNN처럼 batch 통계가 안정적인 구조에서 자주 사용된다.
+| 항목 | Batch Normalization | Layer Normalization |
+| --- | --- | --- |
+| 통계 범위 | 같은 feature의 batch sample | 한 sample의 hidden dimension |
+| Batch size 영향 | 큼 | 작음 |
+| Train/Eval 통계 | 서로 다름 | 동일한 방식 |
+| 대표 사용 | CNN | RNN, Transformer |
 
-Layer Normalization은 한 sample의 hidden vector 전체를 정규화한다. RNN, Transformer처럼 sequence를 다루는 모델에서 자주 사용된다.
-
-정리하면 Batch Norm은 batch 통계에 의존하고, Layer Norm은 sample 내부 통계에 의존한다.
-
-간단히 기억하면 CNN에서는 Batch Norm을 먼저 떠올리고, Transformer나 sequence model에서는 Layer Norm을 먼저 떠올리면 된다. 물론 모델 구조와 batch size에 따라 예외는 있다.
+CNN에서는 BatchNorm, Transformer에서는 LayerNorm을 먼저 떠올릴 수 있지만 절대적인 규칙은 아니다. Model 구조와 batch size를 함께 봐야 한다.
 
 ## PCA
 
-PCA는 Principal Component Analysis의 약자다. 고차원 데이터를 더 낮은 차원으로 투영하면서도 데이터의 중요한 정보를 최대한 보존하려는 방법이다.
+PCA는 Principal Component Analysis의 약자다. 고차원 데이터를 낮은 차원으로 투영하면서 중요한 분산 구조를 최대한 보존한다.
 
-핵심은 데이터의 분산이 가장 큰 방향을 찾는 것이다. 첫 번째 principal component는 데이터가 가장 많이 퍼져 있는 방향이고, 두 번째 principal component는 첫 번째와 직교하면서 다음으로 분산이 큰 방향이다.
+핵심은 데이터의 분산이 가장 큰 방향을 찾는 것이다.
+
+```text
+PC1 -> 데이터가 가장 많이 퍼진 방향
+PC2 -> PC1과 직교하면서 다음으로 분산이 큰 방향
+PC3 -> 앞 component와 직교하는 다음 방향
+```
+
+상위 component만 남기면 원래 feature 수보다 적은 축으로 데이터를 표현할 수 있다.
 
 PCA는 다음과 같은 상황에서 유용하다.
 
@@ -78,18 +115,24 @@ PCA는 다음과 같은 상황에서 유용하다.
 - 노이즈가 많은 차원을 줄이고 싶을 때
 - 모델 학습 전에 차원을 줄여 계산 비용을 낮추고 싶을 때
 
-단점도 있다. PCA는 선형 투영이기 때문에 복잡한 비선형 구조를 잘 보존하지 못할 수 있다. 또한 principal component는 원래 feature의 조합이므로 해석이 어려워질 수 있다.
+PCA는 선형 투영이므로 복잡한 비선형 구조를 보존하지 못할 수 있다. Principal component도 원래 feature의 조합이기 때문에 의미를 바로 해석하기 어렵다.
 
-PCA를 적용하기 전에는 보통 feature scaling을 먼저 한다. PCA는 분산이 큰 방향을 찾기 때문에, 단위가 큰 feature가 principal component를 지배할 수 있다. 예를 들어 키와 연봉처럼 scale이 전혀 다른 feature를 그대로 넣으면 분산이 큰 feature가 과하게 반영된다.
+PCA를 적용하기 전에는 보통 feature scaling을 먼저 한다. PCA는 분산이 큰 방향을 찾기 때문에 단위가 큰 feature가 component를 지배할 수 있다. 예를 들어 키와 연봉처럼 scale이 다른 feature를 그대로 넣으면 연봉 축이 과하게 반영될 수 있다.
 
-PCA 결과를 해석할 때는 explained variance ratio를 본다. 첫 번째, 두 번째 principal component가 전체 분산의 몇 퍼센트를 설명하는지 확인하면 차원을 얼마나 줄여도 되는지 판단할 수 있다. 예를 들어 2개의 component가 90% 이상의 분산을 설명한다면 시각화나 간단한 모델링에 충분할 수 있다.
+PCA 결과에서는 explained variance ratio를 확인한다. 상위 component가 전체 분산의 몇 퍼센트를 설명하는지 보면 몇 차원까지 남길지 정할 수 있다.
 
 ## 언제 어떤 방법을 쓸까
 
-Normalization은 모델 학습 중 activation 분포를 안정화하는 데 쓰인다. 즉, 학습이 흔들리거나 깊은 network를 안정적으로 훈련하고 싶을 때 중요하다.
+Normalization은 model training 중 activation scale을 안정화하는 데 사용한다.
 
-PCA는 학습 전 데이터 분석이나 feature 전처리에 가깝다. feature 수가 많아 구조를 보기 어렵거나, 차원을 줄여 계산량을 낮추고 싶을 때 사용한다.
+PCA는 training 전 data analysis와 feature preprocessing에 가깝다. Feature 수가 많아 구조를 보기 어렵거나 차원을 줄여 계산량을 낮추고 싶을 때 사용한다.
 
-둘 다 데이터 분포를 다루지만 위치가 다르다. Normalization은 network 내부 학습 안정화에 가깝고, PCA는 입력 feature 공간을 재구성하는 방법에 가깝다.
+## 내가 이해한 핵심
 
-Normalization과 PCA 모두 데이터를 바꾸는 과정이지만 목적이 다르다. Normalization은 학습 안정성을 높이는 것이고, PCA는 차원을 줄이면서 중요한 분산 구조를 보존하는 것이다.
+Normalization과 PCA는 모두 값의 분포를 바꾸지만 같은 기술이 아니다.
+
+- BatchNorm은 batch statistics로 activation을 정규화한다.
+- LayerNorm은 sample 내부 hidden dimension을 정규화한다.
+- PCA는 분산이 큰 새로운 축을 찾아 feature dimension을 줄인다.
+
+즉 Normalization은 **network를 안정적으로 학습하는 방법**이고, PCA는 **입력 feature space를 다시 표현하는 방법**이다. 이름이나 수식보다 어느 단계의 어떤 문제를 해결하는지 구분하는 것이 중요하다.

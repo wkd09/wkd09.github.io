@@ -1,7 +1,7 @@
 ---
 title: "LLM 서빙 기초: KV Cache와 llama.cpp"
 date: 2026-05-29 01:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -111,7 +111,7 @@ llama.cpp에는 여러 양자화 옵션이 있다.
 
 bit 수가 낮아질수록 모델 크기와 메모리 사용량은 줄어들지만, 품질 손실 가능성이 커진다.
 
-## 정리
+## 내가 이해한 핵심
 
 LLM 서빙에서는 다음 두 가지를 같이 봐야 한다.
 

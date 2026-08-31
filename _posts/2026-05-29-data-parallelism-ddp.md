@@ -1,7 +1,7 @@
 ---
 title: "Data Parallelism과 DDP 정리"
 date: 2026-05-29 00:10:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -12,11 +12,11 @@ tags:
 source: "Velog PDF - Data Parallelism & DDP"
 ---
 
-저번에는 모델을 나누어 올리는 Model Parallelism을 알아보았다. 이번에는 데이터를 나누어 GPU에 올리는 Data Parallelism을 정리한다.
+GPU를 여러 장 사용한다고 항상 모델을 여러 조각으로 나누는 것은 아니다. Data Parallelism은 모델 전체를 각 GPU에 복제하고, training batch를 나누어 처리한다.
 
-이번에도 단순한 개념 설명이 아니라, 각 방식이 어떤 병목을 해결하기 위해 나왔는지, 실제 학습 환경에서 어떤 trade-off를 가지는지를 중심으로 살펴본다.
+핵심은 계산은 각 GPU에서 따로 수행하고, parameter update 전에 gradient를 같은 값으로 맞추는 것이다.
 
-먼저 Data Parallelism부터 알아보자.
+이 글에서는 PyTorch `DataParallel`과 `DistributedDataParallel`의 실행 방식, gradient synchronization과 Ring AllReduce를 순서대로 정리한다.
 
 ## Data Parallelism(DP)
 
@@ -26,11 +26,11 @@ DP를 이용해 학습하는 과정은 다음과 같다.
 
 ![Data Parallelism & DDP image 1](https://velog.velcdn.com/images/junmin0413/post/b9c15af8-3993-4fe1-933c-310ac17bb473/image.png)
 
-## Forward
+### Forward
 
 ![Data Parallelism & DDP image 2](https://velog.velcdn.com/images/junmin0413/post/6101831f-5ca0-45ac-9806-97e59f0286dc/image.png)
 
-## Backward
+### Backward
 
 Forward 과정:
 
@@ -48,15 +48,15 @@ Backward 과정:
 4. optimizer step을 통해 parameter가 update된다.
 5. 다시 모든 GPU에 모델 복사본을 broadcast하고 과정을 반복한다.
 
-## 장단점
+### 장단점
 
-## 장점
+#### 장점
 
 - n개의 GPU에 동일한 모델을 올려 학습하므로 학습 속도를 높일 수 있다.
 - 같은 이유로 검증 및 예측 속도도 높일 수 있다.
 - 여러 GPU에 batch를 분할해 학습하므로 batch size를 크게 구성할 수 있다.
 
-## 단점
+#### 단점
 
 - Python에서는 multi-thread 방식이 성능을 저하시킬 수 있다.
 - step마다 각 GPU에 업데이트된 모델을 broadcast해야 한다.
@@ -153,6 +153,24 @@ def train(rank, world_size):
 
 # 실행: torchrun --nproc_per_node=4 train_script.py
 ```
+
+## 내가 이해한 핵심
+
+DP와 DDP는 모두 각 GPU에 모델 전체를 복제하고 batch를 나눈다. 차이는 여러 GPU의 작업을 어떻게 실행하고 gradient를 어디에서 합치는가에 있다.
+
+```text
+DataParallel
+한 process가 여러 GPU를 제어
+-> output과 gradient가 main GPU에 모임
+-> main GPU 병목이 생기기 쉬움
+
+DistributedDataParallel
+GPU마다 독립 process 실행
+-> gradient를 AllReduce로 동기화
+-> multi-GPU와 multi-node 학습에 더 적합
+```
+
+즉 DDP는 모델 memory를 줄이는 방법이 아니다. 각 GPU에 전체 model replica가 필요하다. DDP가 해결하는 문제는 같은 모델로 더 많은 데이터를 병렬 처리해 학습 시간을 줄이는 것이다.
 
 ## 참고 자료
 

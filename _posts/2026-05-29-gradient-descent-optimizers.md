@@ -1,7 +1,7 @@
 ---
 title: "Gradient Descent와 Optimizer 정리"
 date: 2026-05-29 13:30:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -114,6 +114,6 @@ RNN이나 큰 Transformer를 학습할 때 gradient가 갑자기 커지는 explo
 
 하지만 이미지 분류처럼 SGD with momentum이 강한 domain도 있다. 최종 성능이 중요하면 AdamW로 빠르게 baseline을 만들고, 이후 SGD 계열이나 scheduler 조합을 비교하는 방식이 현실적이다.
 
-## 정리
+## 내가 이해한 핵심
 
 Gradient Descent는 loss를 줄이는 방향을 찾는 기본 원리이고, optimizer는 그 이동 방식을 더 안정적이고 빠르게 만드는 방법이다. learning rate, momentum, adaptive scaling을 어떻게 조합하느냐가 학습 안정성과 최종 성능에 큰 영향을 준다.

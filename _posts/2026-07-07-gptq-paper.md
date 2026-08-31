@@ -1,7 +1,7 @@
 ---
 title: "GPTQ 논문 정리: 거대 언어 모델을 3-4bit로 양자화하기"
 date: 2026-07-07 00:00:00 +0900
-last_modified_at: 2026-07-07 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -539,7 +539,7 @@ OBQ 같은 second-order PTQ는 이론적으로 좋아 보이지만, 거대 LLM�
 
 이 조합 때문에 GPTQ는 논문 아이디어가 아니라 실제로 175B 모델을 몇 시간 안에 quantize하는 도구가 된다.
 
-## 정리
+## 내가 이해한 핵심
 
 GPTQ는 다음 문제를 해결한다.
 

@@ -1,7 +1,7 @@
 ---
 title: "ReAct 논문 정리: LLM Agent는 왜 생각하면서 행동해야 할까?"
 date: 2026-07-01 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -21,7 +21,7 @@ source: "arXiv:2210.03629"
 > Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, Yuan Cao  
 > ICLR 2023. [[Paper](https://arxiv.org/pdf/2210.03629)] [[Project](https://react-lm.github.io/)]
 
-논문의 핵심 문제의식은 간단하다.
+핵심 관심사는 하나다.
 
 > LLM은 생각만 잘해서도 부족하고, 행동만 잘해서도 부족하다. 생각하면서 행동하고, 행동 결과를 다시 보고 생각을 고쳐야 한다.
 
@@ -551,7 +551,7 @@ ReAct
 
 ## 14. 내가 이해한 ReAct의 핵심
 
-ReAct의 가장 중요한 메시지는 "LLM을 정적인 답변 생성기로 보지 말자"는 것이다.
+내가 이해한 ReAct의 가장 중요한 메시지는 "LLM을 정적인 답변 생성기로 보지 말자"는 것이다.
 
 CoT는 정적이다.
 

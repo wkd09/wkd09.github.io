@@ -1,7 +1,7 @@
 ---
 title: "Chain-of-Thought Prompting: LLM이 생각하는 과정을 쓰게 하면 왜 성능이 오를까?"
 date: 2026-06-21 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -281,7 +281,7 @@ few-shot setting에서는 몇 개 예시에 chain을 붙이는 비용이 작다.
 
 위 후속 연구 연결은 원 논문의 실험 결과가 아니라, CoT 이후 등장한 연구 흐름을 별도 문헌 기준으로 정리한 것이다.
 
-## 정리
+## 내가 이해한 핵심
 
 Chain-of-Thought Prompting은 매우 단순하다.
 

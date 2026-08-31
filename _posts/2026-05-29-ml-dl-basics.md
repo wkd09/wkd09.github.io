@@ -1,7 +1,7 @@
 ---
 title: "ML/DL 기초 정리"
 date: 2026-05-29 00:30:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -92,7 +92,7 @@ $$
 
 딥러닝은 데이터만 넣으면 모델이 feature 추출 과정까지 함께 학습한다. 이미지에서는 edge, shape, object처럼 낮은 수준의 feature에서 높은 수준의 feature로 점점 추상화된다.
 
-## 정리
+## 내가 이해한 핵심
 
 ML/DL을 볼 때는 다음 흐름을 잡으면 된다.
 

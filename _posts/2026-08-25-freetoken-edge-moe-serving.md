@@ -1,7 +1,7 @@
 ---
 title: "FreeToken 논문 정리: GPU·CPU·PCIe를 함께 쓰는 엣지 MoE 서빙"
 date: 2026-08-25 00:00:00 +0900
-last_modified_at: 2026-08-25 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 summary: "FreeToken이 거대한 MoE 모델을 개인용 PC에서 실행하기 위해 prefill과 decode를 다르게 최적화하고, GPU cache miss를 PCIe 전송과 CPU 계산으로 나누는 원리를 정리한다."
 categories:
   - research
@@ -25,7 +25,7 @@ source: "arXiv:2608.16157"
 > Shuo Yang, Xiaoze Fan, Melissa Pan, Haocheng Xi, Zhe Wang, Shanlin Sun, Kurt Keutzer, Song Han, Matei Zaharia, Chenfeng Xu, Ion Stoica  
 > [[Paper](https://arxiv.org/pdf/2608.16157)] [[Code](https://github.com/FlashML-org/FreeToken)]
 
-논문의 문제의식은 명확하다.
+핵심 관심사는 하나다.
 
 > Open-weight 모델을 내려받을 수 있다는 것과 개인이 그 모델을 실제로 돌릴 수 있다는 것은 다르다.
 
@@ -449,7 +449,7 @@ Special token으로 block 경계가 명확한 tool-calling protocol에서는 che
 
 ## 15. 내가 이해한 핵심
 
-FreeToken을 단순한 MoE offloading engine으로 보면 핵심을 놓치기 쉽다.
+FreeToken을 처음 보면 MoE weight를 CPU로 offloading하는 engine처럼 보인다. 하지만 내가 이해한 핵심은 GPU와 CPU 중 한쪽을 선택하는 것이 아니라 전체 memory hierarchy를 동시에 사용한다는 점이다.
 
 이 논문이 보여주는 중요한 관점은 **희소성만으로는 로컬 추론이 빨라지지 않는다**는 것이다. MoE가 한 token의 계산량을 줄여도 전체 expert pool과 cache miss는 남는다. 결국 성능은 GPU FLOPs보다 data가 어디에 있고, 다음 layer와 token에서 누가 그 data를 읽을지에 의해 결정된다.
 

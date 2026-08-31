@@ -1,7 +1,7 @@
 ---
 title: "Speculative Decoding 논문 정리: 작은 모델로 큰 모델의 디코딩을 빠르게 만들기"
 date: 2026-06-17 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -190,7 +190,7 @@ LLM serving에서 speculative decoding은 decode latency를 줄이는 대표적�
 
 최근 LLM serving 시스템에서는 speculative decoding이 KV cache 관리, continuous batching, paged attention, quantization과 함께 쓰일 수 있다. 다만 이 방법은 attention kernel 자체를 빠르게 만드는 기술이 아니라 decoding algorithm의 직렬성을 줄이는 기술이다.
 
-## 정리
+## 내가 이해한 핵심
 
 이 논문의 핵심은 "작은 모델로 대충 생성한다"가 아니다. 핵심은 작은 모델의 제안을 **큰 모델 분포를 보존하는 방식으로 검증하고 보정한다**는 점이다.
 

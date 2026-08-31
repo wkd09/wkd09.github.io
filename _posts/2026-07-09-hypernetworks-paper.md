@@ -1,7 +1,7 @@
 ---
 title: "HyperNetworks 논문 정리: 가중치를 생성하는 네트워크"
 date: 2026-07-09 00:00:00 +0900
-last_modified_at: 2026-07-09 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -21,7 +21,7 @@ source: "arXiv:1609.09106"
 > David Ha, Andrew Dai, Quoc V. Le  
 > Google Brain. [[Paper](https://arxiv.org/pdf/1609.09106)]
 
-논문의 핵심은 간단하다.
+핵심 관심사는 하나다.
 
 > 하나의 네트워크가 다른 네트워크의 weight를 직접 학습하는 대신, 그 weight를 만들어내는 함수를 학습하게 하자.
 
@@ -445,9 +445,9 @@ Mixture-of-Experts
 
 HyperNetwork는 이 질문에 대해 "parameter 자체를 입력과 문맥에 따라 생성하거나 조정하자"라고 답한다.
 
-## 15. 내가 이해한 점
+## 15. 내가 이해한 핵심
 
-이 논문의 핵심은 단순히 "작은 network가 큰 network의 weight를 만든다"가 아니다.
+HyperNetworks를 처음 보면 "작은 network가 큰 network의 weight를 만든다"는 문장이 전부인 것처럼 보인다. 하지만 내가 이해한 핵심은 weight sharing 방식을 고정하지 않고 학습하게 만든다는 점이다.
 
 더 중요한 메시지는 이것이다.
 
@@ -465,4 +465,3 @@ RNN은 모든 time step에서 weight를 공유한다. 이건 강한 가정이다
 이 생각은 지금 봐도 꽤 신선하다. 특히 LLM 시대에는 adapter, routing, conditional computation, test-time adaptation처럼 "고정된 모델을 어떻게 상황에 맞게 바꿀 것인가"가 계속 중요해지고 있다.
 
 그런 의미에서 HyperNetworks는 오래된 논문이지만, 여전히 읽을 가치가 있는 논문이다.
-

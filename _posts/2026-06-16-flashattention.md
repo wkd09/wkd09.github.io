@@ -1,7 +1,7 @@
 ---
 title: "FlashAttention-1 논문 정리: IO-Aware Exact Attention"
 date: 2026-06-16 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -285,7 +285,7 @@ FlashAttention은 `QK^T -> softmax -> PV` 계산을 더 memory-efficient하게 �
 
 둘은 경쟁 기술이 아니라 서로 다른 병목을 줄이는 기술이다.
 
-## 정리
+## 내가 이해한 핵심
 
 FlashAttention-1의 핵심은 attention을 **IO-aware algorithm**으로 다시 보는 것이다.
 

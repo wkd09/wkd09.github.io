@@ -1,7 +1,7 @@
 ---
 title: "MoBA: Long-Context LLM을 위한 Block Sparse Attention 이해하기"
 date: 2026-06-19 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -378,7 +378,7 @@ Repository context
 
 물론 이것도 연구 아이디어다. 공개 자료 기준으로 MoBA가 repo-level code analysis에 대해 어떤 성능을 보이는지는 단정하기 어렵다.
 
-## 정리
+## 내가 이해한 핵심
 
 MoBA는 long-context LLM에서 full attention의 quadratic bottleneck을 줄이려는 block sparse attention 구조다. Linear attention처럼 attention 계산식을 크게 바꾸기보다는, 기존 attention의 형태를 유지하면서 query별로 볼 block을 줄이는 쪽에 가깝다.
 

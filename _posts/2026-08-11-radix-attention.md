@@ -1,6 +1,7 @@
 ---
 title: "RadixAttention 정리: Radix Tree로 Prefix KV Cache를 재사용하는 방법"
 date: 2026-08-11 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 summary: "Prefix caching의 기본 원리를 짧게 살펴보고, SGLang의 RadixAttention이 radix tree와 cache-aware scheduling으로 KV cache를 재사용하는 과정을 정리한다."
 categories:
   - engineering
@@ -738,7 +739,7 @@ python -m sglang.launch_server \
 
 `--schedule-policy lpm` 실험도 별도로 수행하는 것이 좋다. Radix cache 자체의 효과와 cache-aware scheduling의 효과를 분리해야 어떤 요소가 개선을 만들었는지 알 수 있다.
 
-## 정리
+## 내가 이해한 핵심
 
 Prefix caching은 여러 LLM 요청이 공유하는 앞부분의 KV cache를 재사용해 중복 prefill을 줄이는 최적화다. RadixAttention은 이 아이디어를 SGLang runtime 안에서 radix tree, LRU eviction과 cache-aware scheduling으로 구현한다.
 

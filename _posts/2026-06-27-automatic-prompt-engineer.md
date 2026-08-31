@@ -1,7 +1,7 @@
 ---
 title: "Automatic Prompt Engineer 논문 정리: 프롬프트 엔지니어링을 최적화 문제로 바꾸기"
 date: 2026-06-27 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -20,9 +20,9 @@ source: "arXiv:2211.01910"
 > Yongchao Zhou, Andrei Ioan Muresanu, Ziwen Han, Keiran Paster, Silviu Pitis, Harris Chan, Jimmy Ba  
 > ICLR 2023. [[Paper](https://arxiv.org/pdf/2211.01910)] [[Code](https://github.com/keirp/automatic_prompt_engineer)]
 
-논문의 핵심 제안은 **Automatic Prompt Engineer**, 줄여서 `APE`다. 사람이 프롬프트를 감으로 고치고 몇 개만 실험하는 대신, LLM이 후보 instruction을 여러 개 만들고, 실제 task 점수로 평가해서 가장 좋은 instruction을 고르는 방식이다.
+논문의 핵심 제안은 **Automatic Prompt Engineer**, 줄여서 `APE`다. 사람이 prompt를 감으로 고치고 몇 개만 실험하는 대신, LLM이 후보 instruction을 여러 개 만들고 실제 task 점수로 가장 좋은 instruction을 고른다.
 
-한 줄로 요약하면 이렇다.
+핵심 흐름은 다음과 같다.
 
 > APE는 `입출력 예시 -> 후보 instruction 생성 -> 후보별 성능 평가 -> 최고 점수 instruction 선택`을 자동화한 프롬프트 최적화 알고리즘이다.
 
@@ -367,9 +367,9 @@ prompt candidate
 
 다섯 번째 한계는 **instruction만으로 해결할 수 없는 task**다. 모델이 필요한 지식이나 reasoning 능력을 갖고 있지 않다면, prompt search만으로는 한계가 있다. 이 경우 RAG, tool use, fine-tuning, data improvement가 함께 필요하다.
 
-## 15. 정리
+## 15. 내가 이해한 핵심
 
-이 논문의 진짜 기여는 LLM이 사람보다 프롬프트를 잘 쓴다는 주장 하나에 있지 않다. 더 중요한 기여는 프롬프트 엔지니어링을 다음 구조로 바꿨다는 점이다.
+APE를 처음 보면 LLM에게 prompt 작성을 맡기는 방법처럼 보인다. 하지만 내가 이해한 핵심은 prompt engineering을 다음과 같은 optimization loop로 바꿨다는 점이다.
 
 ```text
 기존 방식:

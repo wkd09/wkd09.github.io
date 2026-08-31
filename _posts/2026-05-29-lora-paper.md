@@ -1,7 +1,7 @@
 ---
 title: "LoRA 논문 정리: Low-Rank Adaptation으로 효율적인 파인튜닝하기"
 date: 2026-05-29 01:10:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -161,7 +161,7 @@ LoRA의 의의는 대규모 모델 fine-tuning을 현실적인 비용으로 낮�
 
 오늘날 LLM fine-tuning에서 LoRA와 QLoRA 계열이 널리 쓰이는 이유도 이 지점에 있다. 모델 전체를 복사하지 않고도 특정 task나 domain에 맞춘 변화를 학습할 수 있기 때문이다.
 
-## 정리
+## 내가 이해한 핵심
 
 LoRA는 full fine-tuning을 다음처럼 바꾼다.
 

@@ -1,6 +1,7 @@
 ---
 title: "Qwen3-4B로 확인한 LLM 병렬화 실습: LoRA, DDP, FSDP, TP, vLLM"
 date: 2026-07-19 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -13,7 +14,7 @@ tags:
   - vLLM
 ---
 
-LLM 병렬화는 이름만 보면 비슷해 보이지만, 실제로 해결하는 문제는 서로 다르다. DDP는 학습 시간을 줄이고, FSDP는 학습 때 GPU 한 장이 감당해야 하는 메모리를 줄이며, Tensor Parallelism(TP)은 한 모델의 계산을 여러 GPU에 나눈다. 서빙에서는 vLLM의 배치 처리 방식과 병렬화 구성이 처리량과 지연 시간의 균형을 바꾼다.
+LLM 병렬화는 이름만 보면 비슷하지만 해결하는 문제는 서로 다르다. DDP는 학습 시간을 줄이고, FSDP는 GPU 한 장이 감당해야 하는 training memory를 줄이며, Tensor Parallelism(TP)은 한 model의 계산을 여러 GPU에 나눈다. Serving에서는 vLLM의 batching과 병렬화 구성이 throughput과 latency의 균형을 바꾼다.
 
 이번 글에서는 `Qwen/Qwen3-4B`로 진행한 실습 결과를 기준으로, 단일 GPU LoRA부터 2-GPU DDP, FSDP, TP, vLLM 서빙까지 한 흐름으로 정리한다. 개념 자체는 이전 글에서 다뤘으므로, 여기서는 **어떤 병목이 실제로 드러났고 어떤 수치로 확인했는지**에 집중한다.
 
@@ -173,7 +174,7 @@ tp_mlp = parallelize_module(
 
 다만 이 표만으로 "DP가 항상 TP나 PP보다 빠르다"고 결론 내릴 수는 없다. 모델 크기, GPU 연결 방식, prompt와 output 길이, replica 수, server option, traffic 형태가 모두 결과에 영향을 준다. 특히 이번 결과는 TTFT를 한 번 측정한 값이므로, 운영 결정을 위해서는 충분한 반복 측정과 p95/p99 latency도 추가로 수집해야 한다.
 
-## 정리: 병렬화 방식은 병목에 맞춰 선택한다
+## 내가 이해한 핵심: 병렬화 방식은 병목에 맞춰 선택한다
 
 이번 실습에서 얻은 결론은 단순하다.
 

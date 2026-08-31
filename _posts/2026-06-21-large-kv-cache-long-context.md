@@ -1,7 +1,7 @@
 ---
 title: "Long Context에서 KV Cache가 병목이 되는 이유"
 date: 2026-06-21 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - engineering
 tags:
@@ -233,7 +233,7 @@ KV cache 병목을 보려면 단순히 GPU 사용률만 보면 부족하다.
 
 특히 평균 prompt length보다 p95, p99 prompt length가 중요하다. 일부 긴 요청이 전체 scheduler와 memory를 흔들 수 있기 때문이다.
 
-## 정리
+## 내가 이해한 핵심
 
 KV cache는 LLM inference를 빠르게 만드는 핵심 최적화다.
 

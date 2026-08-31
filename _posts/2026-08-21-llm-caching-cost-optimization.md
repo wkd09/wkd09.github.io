@@ -1,6 +1,7 @@
 ---
 title: "LLM Caching으로 비용 줄이기: Prompt Cache와 Semantic Cache 설계"
 date: 2026-08-21 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 summary: "LLM 캐싱을 exact match, provider prompt cache, semantic response cache로 나누어 보고, 실제 비용 절감률을 계산하는 방법과 Redis 기반 운영 설계를 정리한다."
 categories:
   - engineering
@@ -351,7 +352,7 @@ L5  LLM inference                최종 cache miss만 처리
 
 L3에서 hit가 나면 L4와 L5를 모두 건너뛴다. L3가 miss여도 L4가 공통 prompt의 입력 계산을 줄인다. 이렇게 각 계층이 서로 다른 중복을 제거한다.
 
-## 정리
+## 내가 이해한 핵심
 
 LLM 비용 최적화에서 가장 저렴한 호출은 실행하지 않은 호출이다. Semantic cache는 표현이 다른 반복 질문까지 찾아 완성된 응답을 재사용하므로 FAQ, helpdesk, 안정적인 문서 Q&A에서 큰 효과를 낼 수 있다.
 

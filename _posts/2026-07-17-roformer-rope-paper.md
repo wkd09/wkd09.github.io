@@ -1,7 +1,7 @@
 ---
 title: "RoFormer 논문 정리: 위치 정보를 회전으로 표현하는 RoPE"
 date: 2026-07-17 00:00:00 +0900
-last_modified_at: 2026-07-17 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -22,7 +22,7 @@ source: "arXiv:2104.09864"
 > Jianlin Su, Yu Lu, Shengfeng Pan, Ahmed Murtadha, Bo Wen, Yunfeng Liu  
 > [[Paper](https://arxiv.org/pdf/2104.09864)]
 
-논문의 핵심은 한 문장으로 정리할 수 있다.
+핵심 관심사는 하나다.
 
 > 토큰의 절대 위치를 query와 key의 회전으로 표현하면, self-attention의 내적 안에 상대적인 위치 차이를 자연스럽게 넣을 수 있다.
 
@@ -221,9 +221,9 @@ context length 확장 연구와 연결하기 쉽다
 
 특히 긴 문서를 처리하는 RAG나 긴 대화형 Agent에서는 “현재 토큰과 참조 토큰이 얼마나 떨어져 있는가”가 중요하다. RoPE는 이 거리 정보를 attention 계산에 직접 반영할 수 있는 기반을 제공한다. 다만 긴 context를 실제로 안정적으로 사용하려면 KV cache, attention 효율화, position scaling을 함께 고려해야 한다.
 
-## 내가 이해한 점
+## 내가 이해한 핵심
 
-RoPE를 처음 보면 “position embedding을 회전으로 바꾼 방법”처럼 보인다. 하지만 핵심은 회전 그 자체가 아니다.
+RoPE를 처음 보면 “position embedding을 회전으로 바꾼 방법”처럼 보인다. 하지만 내가 이해한 핵심은 회전 자체보다 query-key 내적에 상대 위치 차이가 남는다는 점이다.
 
 > query와 key를 각자의 위치만큼 회전하면, 두 벡터의 내적에는 두 위치의 차이가 남는다.
 
@@ -236,7 +236,7 @@ RoPE를 처음 보면 “position embedding을 회전으로 바꾼 방법”처�
 
 결국 RoPE는 positional encoding을 attention 바깥에 덧붙이는 방식이 아니라, **attention이 두 토큰의 관계를 계산하는 좌표계 자체를 위치에 따라 회전시키는 방법**이다. 오늘날 LLM에서 RoPE를 이해하는 것은 context length 확장과 long-context 성능을 이해하기 위한 출발점이기도 하다.
 
-## 참고
+## 참고 자료
 
 - Su et al., [RoFormer: Enhanced Transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864), arXiv:2104.09864.
 - 논문 결과 이미지는 위 논문의 실험 결과를 바탕으로 정리한 것이다.

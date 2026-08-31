@@ -1,7 +1,7 @@
 ---
 title: "Transformer 정리: Attention만으로 시퀀스를 다루는 방법"
 date: 2026-05-29 00:00:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -104,7 +104,7 @@ Transformer는 RNN처럼 순서대로 토큰을 처리하지 않는다. attentio
 
 이 방식은 학습 중 보지 못한 더 긴 시퀀스에도 어느 정도 일반화할 수 있다는 장점이 있다.
 
-## 정리
+## 내가 이해한 핵심
 
 Transformer는 recurrent 구조의 병렬화 한계와 context vector 병목을 attention으로 해결한 모델이다.
 

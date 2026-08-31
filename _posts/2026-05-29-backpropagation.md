@@ -1,7 +1,7 @@
 ---
 title: "Backpropagation 정리: Chain Rule로 가중치를 업데이트하는 방법"
 date: 2026-05-29 13:40:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - study
 tags:
@@ -12,13 +12,13 @@ source: "Notion PDF Export - Back propagation"
 ---
 
 
-# Back propagation
+# Backpropagation: Loss가 각 Weight에 미친 영향 구하기
 
-역전파란 target 값과 모델이 계산한 output이 얼마나 차이 나는지(loss 값)를 구한 뒤, 오차를 출력층에서 입력층 방향으로 전파해 각 노드의 변수를 갱신하는 알고리즘이다.
+Backpropagation은 loss가 각 weight와 bias에 얼마나 영향을 받았는지 계산하는 방법이다. Output에서 시작해 입력 방향으로 gradient를 전달하고, 그 값을 이용해 parameter를 업데이트한다.
 
-그럼 각 노드가 가지고 있는 변수인 weight, bias 값을 어떻게 갱신할까? 각 노드나 레이어의 값이 제각각인데, 그 값들을 얼마나 변경해야 할까?
+문제는 모든 parameter를 같은 크기로 바꿀 수 없다는 점이다. 어떤 weight는 loss에 큰 영향을 주고, 어떤 weight는 거의 영향을 주지 않는다.
 
-이러한 질문들을 아래 chain rule을 통해 해결한다.
+핵심은 chain rule이다. Forward pass에서 여러 함수를 차례로 통과했다면, backward pass에서는 각 함수의 미분을 반대 순서로 곱해 입력 쪽 parameter의 gradient를 구한다.
 
 ## Chain Rule
 
@@ -32,9 +32,9 @@ $t=g(x)$라고 한다면, $\frac{dy}{dx} = \frac{dy}{dt} \frac{dt}{dx}$이 성�
 
 ---
 
-수식만 보면 직관적으로 이해하기 어렵다.
+수식만 보면 흐름이 잘 보이지 않는다.
 
-먼저 합성함수는 그냥 어떤 함수의 인자로 다른 함수가 주어진 함수이다. 아래 코드를 보면 이해가 될 것이다.
+합성함수는 한 함수의 출력이 다른 함수의 입력으로 들어가는 구조다. 아래 코드로 보면 단순하다.
 
 ```python
 def f(g):
@@ -48,11 +48,7 @@ F = f(g(x))
 # F = 12
 ```
 
-그럼 미분이 가능하다는 말이 뭘까? 만약 미분을 $X$와 $X'$ 사이의 기울기를 구하는 정도로 이해했다면
-
-합성함수에서 갑자기 왜 기울기를 구하지라는 생각이 들 것이다.
-
-하지만 기울기를 구한다는 말은 변화량을 구한다는 것과 동일하다. 합성 함수 코드에서 $F$를 선언할 때 $g$에 주는 값, 즉 매개변수를 변경하면 최종적으로 $F$ 값이 변한다.
+미분은 입력을 조금 바꿨을 때 출력이 얼마나 바뀌는지 구하는 과정이다. 위 코드에서 $x$가 바뀌면 $g(x)$가 바뀌고, 이어서 최종 $F$도 바뀐다. Chain rule은 이 변화가 여러 함수를 지나며 어떻게 이어지는지 계산한다.
 
 ```python
 F = f(g(4))
@@ -213,4 +209,24 @@ $$
 w_{10}^{1+} = w_{10}^{1} - (L \times \frac{\partial E}{\partial w_{10}^{1}}) = 0.4 - (0.3 \times 0.049) = 0.3853
 $$
 
-이렇게 해서 새로운 $w_{10}^{1}$의 값을 구했다. 이렇게 다른 $w$값들도 구할 수 있다.
+이렇게 해서 새로운 $w_{10}^{1}$ 값을 구했다. 다른 weight와 bias도 같은 방식으로 gradient를 계산해 업데이트한다.
+
+## 내가 이해한 핵심
+
+Backpropagation은 loss를 줄이는 방향을 직접 찾아주는 별도의 규칙이 아니다. Forward pass에서 사용한 계산을 반대로 따라가며, 각 parameter가 loss에 기여한 정도를 chain rule로 구하는 과정이다.
+
+```text
+Forward
+input -> weighted sum -> activation -> output -> loss
+
+Backward
+loss -> output gradient -> activation gradient -> weight gradient
+```
+
+핵심은 다음 update 식이다.
+
+$$
+w_{new} = w_{old} - \eta \frac{\partial E}{\partial w}
+$$
+
+Gradient는 어느 방향으로 움직여야 loss가 커지는지를 나타낸다. 그래서 반대 방향으로 learning rate만큼 이동하면 loss를 줄일 수 있다.

@@ -1,7 +1,7 @@
 ---
 title: "BERT 논문 정리: 양방향 Transformer Encoder로 언어 이해하기"
 date: 2026-05-29 01:20:00 +0900
-last_modified_at: 2026-07-04 00:00:00 +0900
+last_modified_at: 2026-08-31 00:00:00 +0900
 categories:
   - research
 tags:
@@ -199,7 +199,7 @@ GPT 계열이 language generation과 prompting 흐름으로 이어졌다면, BER
 - `[CLS]` 기반 sentence representation 활용
 - downstream task를 하나의 pretrained encoder 위에 얹는 방식
 
-## 정리
+## 내가 이해한 핵심
 
 BERT는 "문장을 왼쪽에서 오른쪽으로만 읽는 언어 모델"의 한계를 넘기 위해 양방향 Transformer Encoder를 사전학습한 모델이다.
 
